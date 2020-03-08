@@ -3,12 +3,21 @@
 
 (in-package :cl-simple-table)
 
+(defun numeric-string-p (str)(ignore-errors (parse-integer str)))
+
+(defun parse(str)
+  (cond
+	((not (numeric-string-p str)) str)
+	(t (parse-integer str))
+	)
+  )
+
 (defun table-from-file (filename &key (separator #\tab) parse-elements)
   "Reads the tabular data file and returns the contents. Separator is TAB by default.
    If parse-elements is other than NIL elements from the table will be READ into Lisp objects,
    otherwise only strings will be created."
   (let ((filter (if parse-elements
-                    (lambda (ln) (mapcar (lambda (el) (read-from-string el nil))
+                    (lambda (ln) (mapcar (lambda (el) (parse el))
                                          (split-string separator ln)))
                     (lambda (ln) (split-string separator ln)))))
     (with-open-file (s filename :if-does-not-exist nil)

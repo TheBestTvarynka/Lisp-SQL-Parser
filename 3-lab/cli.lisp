@@ -19,8 +19,8 @@
 (setf (gethash "mp-assistants" tables) mp_assistants)
 (setf (gethash "mp-posts_full" tables) mp_posts)
 
-(defun generateSequence(n)(cond ((< n 1) '())
-                                ((= n 1) '(1))
+(defun generateSequence(n)(cond ((< n 0) '())
+                                ((= n 0) '(0))
                                 (t (append
                                      (generateSequence (- n 1))
                                      (list n)))
@@ -36,7 +36,7 @@
 
 (defun makeIndexHashMap(row)
   (setf tmpHashTable (make-hash-table :test 'equal))
-  (setf (gethash "*" tmpHashTable) (generateSequence (array-total-size row)))
+  (setf (gethash "*" tmpHashTable) (generateSequence (- (array-total-size row) 1)))
   (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
   )
 
@@ -80,9 +80,11 @@
   (setf resultTable (selectColumns columns (gethash tableName tables)))
   resultTable
   )
-(query '("SELECT" "title" "id_mp" "FROM" "map_zal-skl9"))
+
+(query '("SELECT" "*" "title" "id_mp" "FROM" "map_zal-skl9"))
 (terpri)
-(write (query '("SELECT" "title" "id_mp" "FROM" "map_zal-skl9")))
+(write (query '("SELECT" "*" "title" "id_mp" "FROM" "map_zal-skl9")))
+(exit)
 
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
