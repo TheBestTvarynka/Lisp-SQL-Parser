@@ -58,7 +58,7 @@
 (defun split-str (string &optional (separator " "))
   (split-str-1 string separator))
 
-(defun getTable(tokens)
+(defun getTableName(tokens)
   (nth 1 (member "FROM" tokens :test #'string=))
   )
 
@@ -68,6 +68,23 @@
 (write (getTable '("SELECT" "*" "FROM" "King")))
 (exit)
 ||#
+
+(defun getColumnsNames(tokens)
+  (subseq tokens 1 (position "FROM" tokens :test #'string=))
+  )
+
+#||
+(write (getColumnsNames '("SELECT" "*" "FROM" "table1")))
+(terpri)
+(write (getColumnsNames '("SELECT" "cal1" "cal2" "cal3" "FROM" "table3")))
+(exit)
+||#
+
+(defun query(tokens)
+  (setf tableName (getTableName tokens))
+  (setf resultColumns ())
+  resultColumns
+  )
 
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))

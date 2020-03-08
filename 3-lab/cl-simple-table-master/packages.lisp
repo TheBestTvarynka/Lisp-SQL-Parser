@@ -21,6 +21,7 @@
            :row-sequence->table
            :with-rows
            :select
+           :select1
            :distinct
            :top
            :order-by

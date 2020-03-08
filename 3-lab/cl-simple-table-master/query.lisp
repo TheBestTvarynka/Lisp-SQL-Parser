@@ -13,6 +13,16 @@
               columns)
         (add-to-table new-row result)))))
 
+(defun select1 (table columns)
+  "Selects the given columns from the table and returns them as a new table."
+  (let ((result (make-table)))
+    (with-rows (table row result)
+      (let ((new-row (make-row)))
+        (mapc (lambda (col)
+                (add-to-row (get-row-column col row) new-row))
+              columns)
+        (add-to-table new-row result)))))
+
 (defun distinct (table column)
   "Returns the unique elements from the given column in the given table as a new table."
   (let ((added (make-hash-table :test #'equal))
