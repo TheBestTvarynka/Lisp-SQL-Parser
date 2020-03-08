@@ -14,6 +14,39 @@
 (defvar plenary_register_mps (simple-table:read-tsv #P"plenary_register_mps-skl9.tsv"))
 (defvar mps_declarations_rada(json:decode-json (open "./mps-declarations_rada.json")))
 
+(defun generateSequence(n)(cond ((< n 1) '())
+                                ((= n 1) '(1))
+                                (t (append
+                                     (generateSequence (- n 1))
+                                     (list n)))
+                                ))
+
+(defun makeIndexes(i row hashTable)
+  (cond ((< i 0) hashTable)
+		(t (setf (gethash (aref row i) hashTable) (list (+ i 1)))
+		   (makeIndexes (- i 1) row hashTable)
+		  )
+		)
+  )
+
+
+(defun makeHashMap(row)
+  (setf tmpHashTable (make-hash-table))
+  (setf (gethash '* tmpHashTable) (generateSequence (array-total-size row)))
+  (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
+  )
+
+#||
+(defvar nht (makeHashMap #(A B C D E)))
+(write (gethash 'A nht))
+(write (gethash 'B nht))
+(write (gethash 'C nht))
+(write (gethash 'D nht))
+(write (gethash 'E nht))
+(write (gethash '* nht))
+(exit)
+||#
+
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
 							     (t (printTable simple_table (- row 1))
