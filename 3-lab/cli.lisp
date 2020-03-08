@@ -58,6 +58,17 @@
 (defun split-str (string &optional (separator " "))
   (split-str-1 string separator))
 
+(defun getTable(tokens)
+  (nth 1 (member "FROM" tokens :test #'string=))
+  )
+
+#||
+(write (getTable '("SELECT" "*" "FROM" "TABLE1")))
+(terpri)
+(write (getTable '("SELECT" "*" "FROM" "King")))
+(exit)
+||#
+
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
 							     (t (printTable simple_table (- row 1))
