@@ -29,14 +29,13 @@
 		)
   )
 
-
 (defun makeHashMap(row)
   (setf tmpHashTable (make-hash-table))
   (setf (gethash '* tmpHashTable) (generateSequence (array-total-size row)))
   (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
   )
 
-#||
+#|| test makeHashMap function
 (defvar nht (makeHashMap #(A B C D E)))
 (write (gethash 'A nht))
 (write (gethash 'B nht))
@@ -46,6 +45,18 @@
 (write (gethash '* nht))
 (exit)
 ||#
+
+(defun split-str-1 (string &optional (separator " ") (r nil))
+  (let ((n (position separator string
+                   :from-end t
+                   :test #'(lambda (x y)
+                             (find y x :test #'string=)))))
+    (if n
+      (split-str-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
+      (cons string r))))
+
+(defun split-str (string &optional (separator " "))
+  (split-str-1 string separator))
 
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
