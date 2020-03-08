@@ -8,11 +8,16 @@
 (asdf:load-system 'cl-json)
 
 ; load parse files and save data to variables
-(defvar map_zal (simple-table:read-csv #P"map_zal-skl9.csv" t))
+(defvar map_zal (simple-table:read-csv #P"map_zal-skl9.csv"))
 (defvar mp_assistants (simple-table:read-csv #P"mp-assistants.csv" t))
 (defvar mp_posts (simple-table:read-csv #P"mp-posts_full.csv"))
 (defvar plenary_register_mps (simple-table:read-tsv #P"plenary_register_mps-skl9.tsv"))
 (defvar mps_declarations_rada(json:decode-json (open "./mps-declarations_rada.json")))
+
+(defvar tables (make-hash-table :test 'equal))
+(setf (gethash "map_zal-skl9" tables) map_zal)
+(setf (gethash "mp-assistants" tables) mp_assistants)
+(setf (gethash "mp-posts_full" tables) mp_posts)
 
 (defun generateSequence(n)(cond ((< n 1) '())
                                 ((= n 1) '(1))
@@ -23,28 +28,26 @@
 
 (defun makeIndexes(i row hashTable)
   (cond ((< i 0) hashTable)
-		(t (setf (gethash (aref row i) hashTable) (list (+ i 1)))
+		(t (setf (gethash (aref row i) hashTable) (list i))
 		   (makeIndexes (- i 1) row hashTable)
 		  )
 		)
   )
 
-(defun makeHashMap(row)
-  (setf tmpHashTable (make-hash-table))
-  (setf (gethash '* tmpHashTable) (generateSequence (array-total-size row)))
+(defun makeIndexHashMap(row)
+  (setf tmpHashTable (make-hash-table :test 'equal))
+  (setf (gethash "*" tmpHashTable) (generateSequence (array-total-size row)))
   (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
   )
 
-#|| test makeHashMap function
-(defvar nht (makeHashMap #(A B C D E)))
-(write (gethash 'A nht))
-(write (gethash 'B nht))
-(write (gethash 'C nht))
-(write (gethash 'D nht))
-(write (gethash 'E nht))
-(write (gethash '* nht))
-(exit)
-||#
+(defun convertToIndexes(columnsNames tableName)
+  (setf hashMap (makeIndexHashMap (simple-table:get-row 0 (gethash tableName tables))))
+  (reduce #'(lambda(lst column)
+			  (append lst (gethash column hashMap)))
+		  columnsNames
+		  :initial-value ()
+     )
+  )
 
 (defun split-str-1 (string &optional (separator " ") (r nil))
   (let ((n (position separator string
@@ -62,29 +65,24 @@
   (nth 1 (member "FROM" tokens :test #'string=))
   )
 
-#||
-(write (getTable '("SELECT" "*" "FROM" "TABLE1")))
-(terpri)
-(write (getTable '("SELECT" "*" "FROM" "King")))
-(exit)
-||#
-
 (defun getColumnsNames(tokens)
   (subseq tokens 1 (position "FROM" tokens :test #'string=))
   )
 
-#||
-(write (getColumnsNames '("SELECT" "*" "FROM" "table1")))
-(terpri)
-(write (getColumnsNames '("SELECT" "cal1" "cal2" "cal3" "FROM" "table3")))
-(exit)
-||#
+(defun selectColumns(columns table)
+  (simple-table:select1 table columns)
+  )
 
 (defun query(tokens)
   (setf tableName (getTableName tokens))
-  (setf resultColumns ())
-  resultColumns
+  (setf columns (convertToIndexes (getColumnsNames tokens) tableName))
+  (write columns)
+  (setf resultTable (selectColumns columns (gethash tableName tables)))
+  resultTable
   )
+(query '("SELECT" "title" "id_mp" "FROM" "map_zal-skl9"))
+(terpri)
+(write (query '("SELECT" "title" "id_mp" "FROM" "map_zal-skl9")))
 
 (defun printTable(simple_table row)(cond
 								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
