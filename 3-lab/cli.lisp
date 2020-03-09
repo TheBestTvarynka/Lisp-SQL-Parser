@@ -18,6 +18,7 @@
 (setf (gethash "map_zal-skl9" tables) map_zal)
 (setf (gethash "mp-assistants" tables) mp_assistants)
 (setf (gethash "mp-posts_full" tables) mp_posts)
+(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
 (defun generateSequence(n)(cond ((< n 0) '())
                                 ((= n 0) '(0))
@@ -73,6 +74,51 @@
   (simple-table:select1 table columns)
   )
 
+(defun getComparator(value)
+  (cond
+      ((numberp value) #'<)
+      (t #'string<)
+      )
+  )
+#||
+(write (funcall (getComparator "pasha") "pasha" "pacha"))
+(terpri)
+(write (string< "pacha" "pasha"))
+(terpri)
+(write (funcall (getComparator 65) 45 98))
+(exit)
+||#
+
+(defun selectDistinct(index rows table)
+  (cond
+	((= (+ index 1) rows) table)
+	((equalp (simple-table:get-row index table) (simple-table:get-row (+ index 1) table))
+	 (selectDistinct (+ index 1) rows (remove index table))
+	 )
+	(t (selectDistinct (+ index 1) rows (remove index table)))
+	)
+  )
+
+#||
+(defvar test (simple-table:read-csv "test.csv" t))
+(pprint test)
+(terpri)
+(pprint (selectDistinct 0 (simple-table:num-rows test) test))
+(exit)
+||#
+
+(defun orderBy(index table)
+  (simple-table:order-by
+	table
+	index
+	(getComparator (simple-table:get-row-column index (simple-table:get-row 1 table)))
+	)
+  )
+
+(defun distinct(table)
+  (selectDistinct (orderBy 0 table))
+  )
+
 (defun query(tokens)
   (setf tableName (getTableName tokens))
   (setf columns (convertToIndexes (getColumnsNames tokens) tableName))
@@ -81,8 +127,6 @@
   resultTable
   )
 
-(query '("SELECT" "*" "title" "id_mp" "FROM" "map_zal-skl9"))
-(terpri)
 (write (query '("SELECT" "*" "title" "id_mp" "FROM" "map_zal-skl9")))
 (exit)
 
