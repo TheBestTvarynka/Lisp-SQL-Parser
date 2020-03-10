@@ -74,20 +74,38 @@
   (simple-table:select1 table columns)
   )
 
+(defun compareVectors(index vector1 vector2)
+  (cond
+	((= index (array-total-size vector1)) nil)
+	((funcall
+	   (getEq (aref vector1 index)) (aref vector1 index) (aref vector2 index)
+	   )
+	 (compareVectors (+ index 1) vector1 vector2)
+	 )
+	(t (funcall
+		 (getComparator (aref vector1 index)) (aref vector1 index) (aref vector2 index)
+		 )
+	   )
+	)
+  )
+
+(defun getEq(value)
+  (cond
+      ((numberp value) #'=)
+	  ((vectorp value) #'equalp)
+      ((stringp value) #'string=)
+	  (t nil)
+      )
+  )
+
 (defun getComparator(value)
   (cond
       ((numberp value) #'<)
-      (t #'string<)
+	  ((vectorp value) #'compareVectors)
+      ((stringp value) #'string<)
+	  (t nil)
       )
   )
-#||
-(write (funcall (getComparator "pasha") "pasha" "pacha"))
-(terpri)
-(write (string< "pacha" "pasha"))
-(terpri)
-(write (funcall (getComparator 65) 45 98))
-(exit)
-||#
 
 (defun selectDistinct(index rows table)
   (cond
