@@ -1,4 +1,4 @@
-
+;
 (require 'asdf)
 ; load package for .csv and .tsv parsing
 (load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
@@ -88,6 +88,7 @@
 	   )
 	)
   )
+(defun compareV(vector1 vector2)(compareVectors 0 vector1 vector2))
 
 (defun getEq(value)
   (cond
@@ -117,13 +118,9 @@
 	)
   )
 
-#||
-(defvar test (simple-table:read-csv "test.csv" t))
-(pprint test)
-(terpri)
-(pprint (selectDistinct 0 (simple-table:num-rows test) test))
-(exit)
-||#
+(defun sortTable(table)
+  (sort table #'compareV)
+  )
 
 (defun orderBy(index table)
   (simple-table:order-by
@@ -134,8 +131,16 @@
   )
 
 (defun distinct(table)
-  (selectDistinct (orderBy 0 table))
+  (selectDistinct 0 (simple-table:num-rows table) (sortTable table))
   )
+
+(defvar test (simple-table:read-csv "test.csv" t))
+(pprint test)
+(terpri)
+(pprint (sortTable test))
+(terpri)
+(pprint (distinct test))
+(exit)
 
 (defun query(tokens)
   (setf tableName (getTableName tokens))
