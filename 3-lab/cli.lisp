@@ -70,6 +70,32 @@
   (subseq tokens 1 (position "FROM" tokens :test #'string=))
   )
 
+(defun getFunction(strFunction value)
+  (cond
+	((string= strFunction "=")
+	 (cond
+	   ((numberp value) #'=)
+	   ((stringp value) #'string=)
+	   (t nil)
+	   ))
+	((string= strFunction "<")
+	 (cond
+	   ((numberp value) #'<)
+	   ((stringp value) #'string<)
+	   (t nil)
+	   ))
+	)
+  )
+
+(defun getWhereClause(tokens tableName)
+  (defvar wherePosition (position "WHERE" tokens :test #'string=))
+  (simple-table:where-filter
+	(getFunction (+ wherePosition 2) (+ wherePosition 3))
+	(nth 0 (convertToIndexes (list (nth (+ wherePosition 1) tokens)) tableName) )
+	(nth (+ wherePosition 3) tokens)
+	)
+  )
+
 (defun selectColumns(columns table)
   (simple-table:select1 table columns)
   )
@@ -130,17 +156,19 @@
 	)
   )
 
-(defun distinct(table)
-  (selectDistinct 0 (simple-table:num-rows table) (sortTable table))
+(defun where(tokens tableName table)
+  (simple-table:where table (getWhereClause tokens tableName))
   )
 
 (defvar test (simple-table:read-csv "test.csv" t))
 (pprint test)
 (terpri)
-(pprint (sortTable test))
-(terpri)
-(pprint (distinct test))
+(pprint (where '("WHERE" "col" "<" "20") "map_zal-skl9" test))
 (exit)
+
+(defun distinct(table)
+  (selectDistinct 0 (simple-table:num-rows table) (sortTable table))
+  )
 
 (defun query(tokens)
   (setf tableName (getTableName tokens))
