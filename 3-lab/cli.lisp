@@ -4,7 +4,7 @@
 (load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
 (asdf:load-system 'cl-simple-table)
 ; load package for .json parsing
-(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-json_0.5.0/cl-json.asd")
+(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-json/cl-json.asd")
 (asdf:load-system 'cl-json)
 
 ; load parse files and save data to variables
@@ -54,10 +54,17 @@
   (let ((n (position separator string
                    :from-end t
                    :test #'(lambda (x y)
-                             (find y x :test #'string=)))))
+                             (find y x :test #'string=)
+							 )
+			)
+		 )
+		)
     (if n
       (split-str-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
-      (cons string r))))
+      (cons string r)
+	  )
+	)
+  )
 
 (defun split-str (string &optional (separator " "))
   (split-str-1 string separator))
