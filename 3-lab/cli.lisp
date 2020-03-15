@@ -81,14 +81,6 @@
   (simple-table:select1 table columns)
   )
 
-(defun orderBy(index table)
-  (simple-table:order-by
-	table
-	index
-	(getComparator (simple-table:get-row-column index (simple-table:get-row 1 table)))
-	)
-  )
-
 (defun query(tokens)
   (setf tableName (getTableName tokens))
   (setf columns (convertToIndexes (getColumnsNames tokens) tableName))
