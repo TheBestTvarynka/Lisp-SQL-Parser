@@ -20,7 +20,7 @@
 	(t table)
 	)
   )
-
+#||
 (require 'asdf)
 (load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
 (asdf:load-system 'cl-simple-table)
@@ -28,4 +28,4 @@
 (defvar table (simple-table:read-csv #P"test.csv" t))
 (pprint table)
 (pprint (orderBy 2 t table)) 
-
+||#

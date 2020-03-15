@@ -18,16 +18,18 @@
 (setf (gethash "map_zal-skl9" tables) map_zal)
 (setf (gethash "mp-assistants" tables) mp_assistants)
 (setf (gethash "mp-posts_full" tables) mp_posts)
-(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
+;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
-(defun generateSequence(n)(cond ((< n 0) '())
-                                ((= n 0) '(0))
-                                (t (append
-                                     (generateSequence (- n 1))
-                                     (list n)))
-                                ))
+(defun generateSequence (n)
+  (cond ((< n 0) '())
+	((= n 0) '(0))
+	(t (append
+		 (generateSequence (- n 1))
+		 (list n)))
+	)
+  )
 
-(defun makeIndexes(i row hashTable)
+(defun makeIndexes (i row hashTable)
   (cond ((< i 0) hashTable)
 		(t (setf (gethash (aref row i) hashTable) (list i))
 		   (makeIndexes (- i 1) row hashTable)
@@ -35,96 +37,117 @@
 		)
   )
 
-(defun makeIndexHashMap(row)
-  (setf tmpHashTable (make-hash-table :test 'equal))
-  (setf (gethash "*" tmpHashTable) (generateSequence (- (array-total-size row) 1)))
-  (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
+(defun makeIndexHashMap (row)
+  (let ((tmpHashTable (make-hash-table :test 'equal)))
+	(setf (gethash "*" tmpHashTable) (generateSequence (- (array-total-size row) 1)))
+    (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
+	)
   )
 
-(defun convertToIndexes(columnsNames tableName)
-  (setf hashMap (makeIndexHashMap (simple-table:get-row 0 (gethash tableName tables))))
+(defvar indexTables (make-hash-table :test 'equal))
+(maphash #'(lambda (tableName table)
+			 (setf (gethash tableName indexTables) (makeIndexHashMap (simple-table:get-row 0 table)))
+			 )
+		 tables)
+
+(defun convertToIndexes (columns indexes)
   (reduce #'(lambda(lst column)
-			  (append lst (gethash column hashMap)))
-		  columnsNames
+			  (append lst (gethash column indexes))
+			  )
+		  columns
 		  :initial-value ()
      )
   )
 
-(defun split-str-1 (string &optional (separator " ") (r nil))
-  (let ((n (position separator string
-                   :from-end t
-                   :test #'(lambda (x y)
-                             (find y x :test #'string=)
-							 )
-			)
-		 )
-		)
-    (if n
-      (split-str-1 (subseq string 0 n) separator (cons (subseq string (1+ n)) r))
-      (cons string r)
-	  )
+#||
+(defvar hashes (gethash "map_zal-skl9" indexTables))
+(pprint (convertToIndexes '("row" "pos_x" "title") hashes))
+(exit)
+||#
+
+(defun getTableName (queryStr)
+  (setq queryStr (string-left-trim " " (subseq queryStr (+ (search "from" queryStr) 4))))
+  (let ((spacePosition (position #\SPACE queryStr)))
+	(setq spacePosition (cond
+						  ((not spacePosition) (length queryStr))
+						  (t spacePosition)
+						  ))
+	(subseq queryStr 0 spacePosition)
 	)
   )
 
-(defun split-str (string &optional (separator " "))
-  (split-str-1 string separator))
-
-(defun getTableName(tokens)
-  (nth 1 (member "FROM" tokens :test #'string=))
+(defun ifDistinct (queryStr)
+  (cond
+	((not (search "distinct" queryStr)) nil)
+	(t t)
+	)
   )
 
-(defun getColumnsNames(tokens)
-  (subseq tokens 1 (position "FROM" tokens :test #'string=))
+(defun selectColumns(queryStr)
+  (let ((startPosition (search "distinct" queryStr)) (endPosition (search "from" queryStr)))
+	(setq startPosition (cond
+						  ((not startPosition) (+ (search "select" queryStr) 6))
+						  (t (+ startPosition 8))
+						  ))
+	(setq queryStr (string-trim " " (subseq queryStr startPosition endPosition)))
+	(map 'list
+	  (lambda (value)(string-trim " " value))
+	  (simple-table:split-string #\, queryStr))
+	)
   )
-
-(defun selectColumns(columns table)
-  (simple-table:select1 table columns)
-  )
-
-(defun query(tokens)
-  (setf tableName (getTableName tokens))
-  (setf columns (convertToIndexes (getColumnsNames tokens) tableName))
-  (write columns)
-  (setf resultTable (selectColumns columns (gethash tableName tables)))
-  resultTable
-  )
-
-(write (query '("SELECT" "*" "title" "id_mp" "FROM" "map_zal-skl9")))
+#||
+(pprint (selectColumns "select distinct col1, col2, * from table" "table"))
+(pprint (selectColumns "select   col1, col2, *   from table" "table"))
+(pprint (selectColumns "select col1, col2, * from table" "table"))
 (exit)
+||#
 
-(defun printTable(simple_table row)(cond
-								 ((= row 0) (pprint (simple-table:get-row 0 simple_table)))
-							     (t (printTable simple_table (- row 1))
-									(pprint (simple-table:get-row row simple_table)))
-								 )
-)
-(defun printAll(tableName)(cond
-							((string= tableName "map_zal-skl9")
-							 (printTable map_zal (- (simple-table:num-rows map_zal) 1)))
-							((string= tableName "mp-assistants")
-							 (printTable mp_assistants (- (simple-table:num-rows mp_assistants) 1)))
-							((string= tableName "mp-posts_full")
-							 (printTable mp_posts (- (simple-table:num-rows mp_posts) 1)))
-							((string= tableName "plenary_register_mps-skl9")
-							 (printTable plenary_register_mps (- (simple-table:num-rows plenary_register_mps) 1)))
-							((string= tableName "mps-declarations_rada")
-							 (printTable mps_declarations_rada (- (simple-table:num-rows mps_declarations_rada) 1)))
-							(t (princ (concatenate 'string "table not found: " tableName)))
-						  )
+(defun printTable (simple_table row)
+  (cond
+	((= row 0) (pprint (simple-table:get-row 0 simple_table)))
+    (t (printTable simple_table (- row 1))
+	(pprint (simple-table:get-row row simple_table)))
+    )
 )
 
-(defun cutName(command)(cond ((not (position #\( command)) command)
-							 (t (subseq command 0 (position #\( command)))
-					   )
-)
-(defun cutParameter(command)(subseq command (+ (position #\( command) 1) (position #\) command)))
+(defun query (queryStr)
+  (let ((columns (selectColumns queryStr))
+		(tableName (getTableName queryStr))
+		(resultTable (simple-table:make-table)))
+	(setq columns (convertToIndexes columns (gethash tableName indexTables)))
+	(setq resultTable (simple-table:select1 (gethash tableName tables) columns))
+	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
+	)
+  )
 
-(defun execute(command)(cond ((string= (cutName command) "exit") "EXIT")
-							 ((string= (cutName command) "load")
-							   (printAll (cutParameter command)))
-							 (t (princ "command not found!"))
-					   )
-)
+(defun loadTable (tableName)
+  (query (concatenate 'string "select * from " tableName))
+  )
+
+(defun parseCommand (commandQuery)
+  (let ((openBracketPosition (position #\( commandQuery)))
+	(setq openBracketPosition (cond
+								((not openBracketPosition) 0)
+								(t openBracketPosition)
+								))
+	(subseq commandQuery 0 openBracketPosition)
+	)
+  )
+
+(defun cutParameter (command)
+  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
+  )
+
+(defun execute (commandQuery)
+  (let ((command (parseCommand commandQuery)))
+	(cond
+	  ((string= command "exit") "EXIT")
+	  ((string= command "query") (query (cutParameter commandQuery)))
+	  ((string= command "load") (loadTable (cutParameter commandQuery)))
+	  (t (pprint "Error: entered command not fund!!!"))
+	  )
+	)
+  )
 
 (defun run ()
     (loop

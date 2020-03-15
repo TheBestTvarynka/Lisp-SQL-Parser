@@ -31,4 +31,5 @@
            :where-and
            :read-csv
            :read-tsv
+           :split-string
            :table-from-file))
