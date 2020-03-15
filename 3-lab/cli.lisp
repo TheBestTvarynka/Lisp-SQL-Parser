@@ -1,19 +1,20 @@
 ;
 (require 'asdf)
 ; load package for .csv and .tsv parsing
-(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
+(load "cl-simple-table-master/cl-simple-table.asd")
 (asdf:load-system 'cl-simple-table)
 ; load package for .json parsing
-(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-json/cl-json.asd")
+(load "cl-json/cl-json.asd")
 (asdf:load-system 'cl-json)
 
 ; load parse files and save data to variables
-(defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv"))
+(defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
 (defvar mp_assistants (simple-table:read-csv #P"datasourse/mp-assistants.csv" t))
 (defvar mp_posts (simple-table:read-csv #P"datasourse/mp-posts_full.csv"))
 (defvar plenary_register_mps (simple-table:read-tsv #P"datasourse/plenary_register_mps-skl9.tsv"))
 (defvar mps_declarations_rada(json:decode-json (open "datasourse/mps-declarations_rada.json")))
 
+; tables - hashmap where key is tablename and value is table
 (defvar tables (make-hash-table :test 'equal))
 (setf (gethash "map_zal-skl9" tables) map_zal)
 (setf (gethash "mp-assistants" tables) mp_assistants)
@@ -21,6 +22,7 @@
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
 (defun generateSequence (n)
+  "generate sequence like '(0 1 2 3 ... )"
   (cond ((< n 0) '())
 	((= n 0) '(0))
 	(t (append
@@ -30,6 +32,9 @@
   )
 
 (defun makeIndexes (i row hashTable)
+  "make hashMap there key is column name and value is its sequence number.
+  like: (col1 -> '(0))
+  		(col2 -> '(1)) ..."
   (cond ((< i 0) hashTable)
 		(t (setf (gethash (aref row i) hashTable) (list i))
 		   (makeIndexes (- i 1) row hashTable)
@@ -38,19 +43,33 @@
   )
 
 (defun makeIndexHashMap (row)
+  "make full hashmap with indexes. like:
+  (col1 -> '(0))
+  ...
+  (* -> '(0 1 2 ...))"
   (let ((tmpHashTable (make-hash-table :test 'equal)))
 	(setf (gethash "*" tmpHashTable) (generateSequence (- (array-total-size row) 1)))
     (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
 	)
   )
 
+; indexTables - hash table that contain all index hashmaps (index hashmap for each table)
+; key is tablename and value is index hashmap
 (defvar indexTables (make-hash-table :test 'equal))
 (maphash #'(lambda (tableName table)
 			 (setf (gethash tableName indexTables) (makeIndexHashMap (simple-table:get-row 0 table)))
 			 )
 		 tables)
 
+; delete first row from every table, becouse first row always contain columns names
+(maphash #'(lambda (tableName table)
+			 (setf (gethash tableName tables) (delete-if (constantly t) table :start 0 :count 1))
+			 )
+		 tables)
+
 (defun convertToIndexes (columns indexes)
+  "convert input list of columns names in list of indexes; like:
+  '(col1 col2 col4 *) -> '(1 2 4 1 2 3 4 5 6)"
   (reduce #'(lambda(lst column)
 			  (append lst (gethash column indexes))
 			  )
@@ -59,13 +78,8 @@
      )
   )
 
-#||
-(defvar hashes (gethash "map_zal-skl9" indexTables))
-(pprint (convertToIndexes '("row" "pos_x" "title") hashes))
-(exit)
-||#
-
 (defun getTableName (queryStr)
+  "cut table name from query"
   (setq queryStr (string-left-trim " " (subseq queryStr (+ (search "from" queryStr) 4))))
   (let ((spacePosition (position #\SPACE queryStr)))
 	(setq spacePosition (cond
@@ -77,6 +91,7 @@
   )
 
 (defun ifDistinct (queryStr)
+  "check if query contain distinct keyword"
   (cond
 	((not (search "distinct" queryStr)) nil)
 	(t t)
@@ -84,6 +99,7 @@
   )
 
 (defun selectColumns(queryStr)
+  "cut columns names from query and return tham as list"
   (let ((startPosition (search "distinct" queryStr)) (endPosition (search "from" queryStr)))
 	(setq startPosition (cond
 						  ((not startPosition) (+ (search "select" queryStr) 6))
@@ -95,14 +111,9 @@
 	  (simple-table:split-string #\, queryStr))
 	)
   )
-#||
-(pprint (selectColumns "select distinct col1, col2, * from table" "table"))
-(pprint (selectColumns "select   col1, col2, *   from table" "table"))
-(pprint (selectColumns "select col1, col2, * from table" "table"))
-(exit)
-||#
 
 (defun printTable (simple_table row)
+  "just print table function"
   (cond
 	((= row 0) (pprint (simple-table:get-row 0 simple_table)))
     (t (printTable simple_table (- row 1))
@@ -111,6 +122,7 @@
 )
 
 (defun query (queryStr)
+  "this function parse query"
   (let ((columns (selectColumns queryStr))
 		(tableName (getTableName queryStr))
 		(resultTable (simple-table:make-table)))
@@ -121,10 +133,12 @@
   )
 
 (defun loadTable (tableName)
+  "load table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
   )
 
 (defun parseCommand (commandQuery)
+  "cut command name from user input"
   (let ((openBracketPosition (position #\( commandQuery)))
 	(setq openBracketPosition (cond
 								((not openBracketPosition) 0)
@@ -135,10 +149,12 @@
   )
 
 (defun cutParameter (command)
+  "cut command parameter (text inside '()') from user input"
   (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
   )
 
 (defun execute (commandQuery)
+  "execute entered text"
   (let ((command (parseCommand commandQuery)))
 	(cond
 	  ((string= command "exit") "EXIT")
@@ -150,6 +166,7 @@
   )
 
 (defun run ()
+  "run cli"
     (loop
         (terpri)
         (princ "[user@host ~]$: ")
@@ -162,3 +179,4 @@
 )
 
 (run)
+
