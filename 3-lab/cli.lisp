@@ -8,11 +8,11 @@
 (asdf:load-system 'cl-json)
 
 ; load parse files and save data to variables
-(defvar map_zal (simple-table:read-csv #P"map_zal-skl9.csv"))
-(defvar mp_assistants (simple-table:read-csv #P"mp-assistants.csv" t))
-(defvar mp_posts (simple-table:read-csv #P"mp-posts_full.csv"))
-(defvar plenary_register_mps (simple-table:read-tsv #P"plenary_register_mps-skl9.tsv"))
-(defvar mps_declarations_rada(json:decode-json (open "./mps-declarations_rada.json")))
+(defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv"))
+(defvar mp_assistants (simple-table:read-csv #P"datasourse/mp-assistants.csv" t))
+(defvar mp_posts (simple-table:read-csv #P"datasourse/mp-posts_full.csv"))
+(defvar plenary_register_mps (simple-table:read-tsv #P"datasourse/plenary_register_mps-skl9.tsv"))
+(defvar mps_declarations_rada(json:decode-json (open "datasourse/mps-declarations_rada.json")))
 
 (defvar tables (make-hash-table :test 'equal))
 (setf (gethash "map_zal-skl9" tables) map_zal)
