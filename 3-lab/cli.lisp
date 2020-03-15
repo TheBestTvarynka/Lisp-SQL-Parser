@@ -77,82 +77,8 @@
   (subseq tokens 1 (position "FROM" tokens :test #'string=))
   )
 
-(defun getFunction(strFunction value)
-  (cond
-	((string= strFunction "=")
-	 (cond
-	   ((numberp value) #'=)
-	   ((stringp value) #'string=)
-	   (t nil)
-	   ))
-	((string= strFunction "<")
-	 (cond
-	   ((numberp value) #'<)
-	   ((stringp value) #'string<)
-	   (t nil)
-	   ))
-	)
-  )
-
-(defun getWhereClause(tokens tableName)
-  (defvar wherePosition (position "WHERE" tokens :test #'string=))
-  (simple-table:where-filter
-	(getFunction (+ wherePosition 2) (+ wherePosition 3))
-	(nth 0 (convertToIndexes (list (nth (+ wherePosition 1) tokens)) tableName) )
-	(nth (+ wherePosition 3) tokens)
-	)
-  )
-
 (defun selectColumns(columns table)
   (simple-table:select1 table columns)
-  )
-
-(defun compareVectors(index vector1 vector2)
-  (cond
-	((= index (array-total-size vector1)) nil)
-	((funcall
-	   (getEq (aref vector1 index)) (aref vector1 index) (aref vector2 index)
-	   )
-	 (compareVectors (+ index 1) vector1 vector2)
-	 )
-	(t (funcall
-		 (getComparator (aref vector1 index)) (aref vector1 index) (aref vector2 index)
-		 )
-	   )
-	)
-  )
-(defun compareV(vector1 vector2)(compareVectors 0 vector1 vector2))
-
-(defun getEq(value)
-  (cond
-      ((numberp value) #'=)
-	  ((vectorp value) #'equalp)
-      ((stringp value) #'string=)
-	  (t nil)
-      )
-  )
-
-(defun getComparator(value)
-  (cond
-      ((numberp value) #'<)
-	  ((vectorp value) #'compareVectors)
-      ((stringp value) #'string<)
-	  (t nil)
-      )
-  )
-
-(defun selectDistinct(index rows table)
-  (cond
-	((= (+ index 1) rows) table)
-	((equalp (simple-table:get-row index table) (simple-table:get-row (+ index 1) table))
-	 (selectDistinct (+ index 1) rows (remove index table))
-	 )
-	(t (selectDistinct (+ index 1) rows (remove index table)))
-	)
-  )
-
-(defun sortTable(table)
-  (sort table #'compareV)
   )
 
 (defun orderBy(index table)
@@ -161,20 +87,6 @@
 	index
 	(getComparator (simple-table:get-row-column index (simple-table:get-row 1 table)))
 	)
-  )
-
-(defun where(tokens tableName table)
-  (simple-table:where table (getWhereClause tokens tableName))
-  )
-
-(defvar test (simple-table:read-csv "test.csv" t))
-(pprint test)
-(terpri)
-(pprint (where '("WHERE" "col" "<" "20") "map_zal-skl9" test))
-(exit)
-
-(defun distinct(table)
-  (selectDistinct 0 (simple-table:num-rows table) (sortTable table))
   )
 
 (defun query(tokens)
