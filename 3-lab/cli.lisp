@@ -7,6 +7,9 @@
 (load "cl-json/cl-json.asd")
 (asdf:load-system 'cl-json)
 
+; load other code
+(load "distinct.lisp")
+
 ; load parse files and save data to variables
 (defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
 (defvar mp_assistants (simple-table:read-csv #P"datasourse/mp-assistants.csv" t))
@@ -128,6 +131,11 @@
 		(resultTable (simple-table:make-table)))
 	(setq columns (convertToIndexes columns (gethash tableName indexTables)))
 	(setq resultTable (simple-table:select1 (gethash tableName tables) columns))
+	(setq resultTable (cond
+						((not (ifDistinct queryStr)) resultTable)
+						(t (distinct resultTable)
+						   )
+						))
 	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
 	)
   )
