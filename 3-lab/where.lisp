@@ -80,12 +80,11 @@
   )
 
 (defun getFnCondition (stringWhere columnIndexes)
-  (pprint stringWhere)
   (let (
 		(column (getOperator stringWhere))
 		(fn (getOperator (removeOperator stringWhere)))
 		(value (getOperator (removeOperator (removeOperator stringWhere)))))
-	(setq column (gethash column columnIndexes))
+	(setq column (nth 0 (gethash column columnIndexes)))
 	(setq value (parse-value value))
 	(setq fn (getFunction fn value))
 	(lambda (row)
@@ -95,7 +94,6 @@
   )
 
 (defun generateCondition (fn stringWhere columnIndexes)
-  (pprint stringWhere)
   (setf fn (cond
 			 ((string= (getOperator stringWhere) "and")
 			  (generateConditionAND fn (getFnCondition (getCondition stringWhere) columnIndexes))
@@ -106,7 +104,6 @@
 			 )
 	)
   (setf stringWhere (removeCondition (removeOperator stringWhere)))
-  (pprint stringWhere)
   (cond
 	((string= stringWhere "") fn)
 	(t (generateCondition fn stringWhere columnIndexes))
@@ -114,9 +111,13 @@
   )
 
 (defun where (stringWhere columnIndexes)
-  (generateCondition #'(lambda (row)T)
-					 (concatenate 'string "and " stringWhere)
-					 columnIndexes)
+  (cond
+	((string= stringWhere "") (lambda (row) T))
+	(t (generateCondition #'(lambda (row)T)
+						  (concatenate 'string "and " stringWhere)
+						  columnIndexes)
+	  )
+	)
   )
 
 ; test generateCondition and other functions

@@ -9,6 +9,7 @@
 
 ; load other code
 (load "distinct.lisp")
+(load "where.lisp")
 
 ; load parse files and save data to variables
 (defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
@@ -93,6 +94,64 @@
 	)
   )
 
+(defun cutWhereClause (queryStr)
+  (let ((curCond (getOperator queryStr)))
+	(setq queryStr (removeOperator queryStr))
+	(setq curCond (concatenate 'string curCond " " (getOperator queryStr)))
+	(setq queryStr (removeOperator queryStr))
+	(setq curCond (concatenate 'string curCond " " (getOperator queryStr)))
+	(setq queryStr (removeOperator queryStr))
+	(cond
+	  ((string= queryStr "") curCond)
+	  ((or (string= (getOperator queryStr) "and") (string= (getOperator queryStr) "or"))
+	   (concatenate 'string
+					curCond
+					" "
+					(getOperator queryStr)
+					" "
+					(cutWhereClause (removeOperator queryStr))
+					)
+	   )
+	  (t curCond)
+	  )
+	)
+  )
+;(pprint (cutWhereClause "col1 > 5"))
+;(exit)
+;(pprint (cutWhereClause "col1 > 5 and col2 = 56"))
+;(pprint (cutWhereClause "col1 > 5 and col2 = 56 order by id"))
+
+(defun getWhere (queryStr)
+  "cut where clause from queryStr. example:
+  'select * from table where cond1 and cond2' -> 'cond1 and cond2'"
+  (let ((startPosition (search "where" queryStr)))
+	(cond
+	  ((not startPosition) "")
+	  (t (cutWhereClause (subseq queryStr (+ startPosition 5))))
+	  )
+	)
+  )
+;(pprint (getWhere "select * from table where col1 > 5 and col2 = 3 or col2 = 5"))
+;(pprint (getWhere "select * from table where col1 > 5 and col2 = 3 or col2 = 5 order by id"))
+;(exit)
+
+(defun iterate (rowIndex table newTable fn)
+  (cond
+	((= rowIndex (simple-table:num-rows table)) newTable)
+	(t (cond
+		 ((funcall fn (simple-table:get-row rowIndex table))
+		  (iterate (+ rowIndex 1)
+				   table
+				   (simple-table:add-to-table (simple-table:get-row rowIndex table) newTable)
+				   fn))
+		 (t (iterate (+ rowIndex 1)
+					 table
+					 newTable
+					 fn))
+		 ))
+	)
+  )
+
 (defun ifDistinct (queryStr)
   "check if query contain distinct keyword"
   (cond
@@ -131,6 +190,11 @@
 		(resultTable (simple-table:make-table)))
 	(setq columns (convertToIndexes columns (gethash tableName indexTables)))
 	(setq resultTable (simple-table:select1 (gethash tableName tables) columns))
+	(setq resultTable (iterate 0
+							   resultTable
+							   (simple-table:make-table)
+							   (where (getWhere queryStr) (gethash tableName indexTables))
+							   ))
 	(setq resultTable (cond
 						((not (ifDistinct queryStr)) resultTable)
 						(t (distinct resultTable)
