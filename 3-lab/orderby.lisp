@@ -13,11 +13,18 @@
 	)
   )
 
-(defun orderBy(index order table)
-  (setq table (sort table (orderVectors index (aref (aref table 0) index))))
+(defun orderBy (index order table)
+  (setq order (cond
+				((string= order "asc") t)
+				(t nil)
+				))
   (cond
-	((not order) (reverse table))
-	(t table)
+	((not index) table)
+	(t (setq table (sort table (orderVectors index (aref (aref table 0) index))))
+	   (cond
+	     ((not order) (reverse table))
+	     (t table)
+	     ))
 	)
   )
 #||
@@ -25,7 +32,8 @@
 (load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
 (asdf:load-system 'cl-simple-table)
 
-(defvar table (simple-table:read-csv #P"test.csv" t))
+(defvar table (simple-table:read-csv #P"datasourse/test.csv" t))
 (pprint table)
+(terpri)
 (pprint (orderBy 2 t table)) 
-||#
+;||#

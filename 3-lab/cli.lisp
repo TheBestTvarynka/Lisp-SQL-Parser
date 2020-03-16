@@ -10,6 +10,7 @@
 ; load other code
 (load "distinct.lisp")
 (load "where.lisp")
+(load "orderby.lisp")
 
 ; load parse files and save data to variables
 (defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
@@ -116,10 +117,6 @@
 	  )
 	)
   )
-;(pprint (cutWhereClause "col1 > 5"))
-;(exit)
-;(pprint (cutWhereClause "col1 > 5 and col2 = 56"))
-;(pprint (cutWhereClause "col1 > 5 and col2 = 56 order by id"))
 
 (defun getWhere (queryStr)
   "cut where clause from queryStr. example:
@@ -131,9 +128,29 @@
 	  )
 	)
   )
-;(pprint (getWhere "select * from table where col1 > 5 and col2 = 3 or col2 = 5"))
-;(pprint (getWhere "select * from table where col1 > 5 and col2 = 3 or col2 = 5 order by id"))
-;(exit)
+
+(defun getOrderBy (queryStr)
+  (let ((startPosition (search "order by" queryStr)))
+	(cond
+	  ((not startPosition) "")
+	  (t (getOperator (subseq queryStr (+ startPosition 8))))
+	  )
+	)
+  )
+
+(defun getOrderDirection (queryStr)
+  (let ((startPosition (search "order by" queryStr))
+		(direction ""))
+	(cond
+	  ((not startPosition) "")
+	  (t (setq direction (getOperator (removeOperator (subseq queryStr (+ startPosition 8)))))
+		 (cond
+		   ((or (string= direction "asc") (string= direction "desc")) direction)
+		   (t "")
+		   ))
+	  )
+	)
+  )
 
 (defun iterate (rowIndex table newTable fn)
   (cond
@@ -200,6 +217,12 @@
 						(t (distinct resultTable)
 						   )
 						))
+	(pprint (getOrderBy queryStr))
+	(pprint (gethash (getOrderBy queryStr) (gethash tableName indexTables)))
+	(pprint (getOrderDirection queryStr))
+	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
+											   (gethash tableName indexTables)))
+							   (getOrderDirection queryStr) resultTable))
 	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
 	)
   )
