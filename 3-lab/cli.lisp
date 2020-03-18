@@ -252,7 +252,7 @@
   "execute entered text"
   (let ((command (parseCommand commandQuery)))
 	(cond
-	  ((string= command "exit") "EXIT")
+	  ((string= command "exit") (exit))
 	  ((string= command "query") (query (cutParameter commandQuery)))
 	  ((string= command "load") (loadTable (cutParameter commandQuery)))
 	  (t (pprint "Error: entered command not fund!!!"))
@@ -262,16 +262,12 @@
 
 (defun run ()
   "run cli"
-    (loop
-        (terpri)
-        (princ "[user@host ~]$: ")
-		(terpri)
-		(if (string= (execute (read-line)) "EXIT")
-		  (return)
-		  ()
-		  )
-    )
-)
+  (terpri)
+  (princ "[user@host ~]$: ")
+  (terpri)
+  (execute (read-line))
+  (run)
+ )
 
 (run)
 
