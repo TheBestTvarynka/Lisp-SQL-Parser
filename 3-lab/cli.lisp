@@ -1,4 +1,4 @@
-;
+
 (require 'asdf)
 ; load package for .csv and .tsv parsing
 (load "cl-simple-table-master/cl-simple-table.asd")
@@ -11,6 +11,7 @@
 (load "distinct.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
+(load "select.lisp")
 
 ; load parse files and save data to variables
 (defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
@@ -71,17 +72,6 @@
 			 (setf (gethash tableName tables) (delete-if (constantly t) table :start 0 :count 1))
 			 )
 		 tables)
-
-(defun convertToIndexes (columns indexes)
-  "convert input list of columns names in list of indexes; like:
-  '(col1 col2 col4 *) -> '(1 2 4 1 2 3 4 5 6)"
-  (reduce #'(lambda(lst column)
-			  (append lst (gethash column indexes))
-			  )
-		  columns
-		  :initial-value ()
-     )
-  )
 
 (defun getTableName (queryStr)
   "cut table name from query"
@@ -177,7 +167,7 @@
 	)
   )
 
-(defun selectColumns(queryStr)
+(defun getColumns(queryStr)
   "cut columns names from query and return tham as list"
   (let ((startPosition (search "distinct" queryStr)) (endPosition (search "from" queryStr)))
 	(setq startPosition (cond
@@ -202,11 +192,11 @@
 
 (defun query (queryStr)
   "this function parse query"
-  (let ((columns (selectColumns queryStr))
+  (let ((columns (getColumns queryStr))
 		(tableName (getTableName queryStr))
 		(resultTable (simple-table:make-table)))
-	(setq columns (convertToIndexes columns (gethash tableName indexTables)))
-	(setq resultTable (simple-table:select1 (gethash tableName tables) columns))
+	;(setq columns (convertToIndexes columns (gethash tableName indexTables)))
+	(setq resultTable (gethash tableName tables))
 	(setq resultTable (iterate 0
 							   resultTable
 							   (simple-table:make-table)
@@ -217,12 +207,10 @@
 						(t (distinct resultTable)
 						   )
 						))
-	(pprint (getOrderBy queryStr))
-	(pprint (gethash (getOrderBy queryStr) (gethash tableName indexTables)))
-	(pprint (getOrderDirection queryStr))
 	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
 											   (gethash tableName indexTables)))
 							   (getOrderDirection queryStr) resultTable))
+	(setq resultTable (selectData columns resultTable))
 	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
 	)
   )
@@ -230,22 +218,6 @@
 (defun loadTable (tableName)
   "load table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
-  )
-
-(defun parseCommand (commandQuery)
-  "cut command name from user input"
-  (let ((openBracketPosition (position #\( commandQuery)))
-	(setq openBracketPosition (cond
-								((not openBracketPosition) 0)
-								(t openBracketPosition)
-								))
-	(subseq commandQuery 0 openBracketPosition)
-	)
-  )
-
-(defun cutParameter (command)
-  "cut command parameter (text inside '()') from user input"
-  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
   )
 
 (defun execute (commandQuery)
