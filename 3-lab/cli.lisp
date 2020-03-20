@@ -14,17 +14,20 @@
 (load "select.lisp")
 
 ; load parse files and save data to variables
-(defvar map_zal (simple-table:read-csv #P"datasourse/map_zal-skl9.csv" t))
-(defvar mp_assistants (simple-table:read-csv #P"datasourse/mp-assistants.csv" t))
-(defvar mp_posts (simple-table:read-csv #P"datasourse/mp-posts_full.csv"))
-(defvar plenary_register_mps (simple-table:read-tsv #P"datasourse/plenary_register_mps-skl9.tsv"))
-(defvar mps_declarations_rada(json:decode-json (open "datasourse/mps-declarations_rada.json")))
+(defvar map_zal (simple-table:read-csv #P"datasource/map_zal-skl9.csv" t))
+(defvar mp_assistants (simple-table:read-csv #P"datasource/mp-assistants.csv" t))
+(defvar mp_posts (simple-table:read-csv #P"datasource/mp-posts_full.csv"))
+(defvar plenary_register_mps (simple-table:read-tsv #P"datasource/plenary_register_mps-skl9.tsv"))
+(defvar mps_declarations_rada(json:decode-json (open "datasource/mps-declarations_rada.json")))
+; table for testing
+(defvar test (simple-table:read-csv #P"datasource/test.csv" t))
 
 ; tables - hashmap where key is tablename and value is table
 (defvar tables (make-hash-table :test 'equal))
 (setf (gethash "map_zal-skl9" tables) map_zal)
 (setf (gethash "mp-assistants" tables) mp_assistants)
 (setf (gethash "mp-posts_full" tables) mp_posts)
+(setf (gethash "test" tables) test)
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
 (defun generateSequence (n)
@@ -146,23 +149,6 @@
 	)
   )
 
-(defun iterate (rowIndex table newTable fn)
-  (cond
-	((= rowIndex (simple-table:num-rows table)) newTable)
-	(t (cond
-		 ((funcall fn (simple-table:get-row rowIndex table))
-		  (iterate (+ rowIndex 1)
-				   table
-				   (simple-table:add-to-table (simple-table:get-row rowIndex table) newTable)
-				   fn))
-		 (t (iterate (+ rowIndex 1)
-					 table
-					 newTable
-					 fn))
-		 ))
-	)
-  )
-
 (defun ifDistinct (queryStr)
   "check if query contain distinct keyword"
   (cond
@@ -206,11 +192,7 @@
 	; take a table indexes
 	(setq indexes (gethash tableName indexTables))
 	; where
-	(setq resultTable (iterate 0
-							   resultTable
-							   (simple-table:make-table)
-							   (where (getWhere queryStr) (gethash tableName indexTables))
-							   ))
+	(setq resultTable (where (getWhere queryStr) (gethash tableName indexTables) resultTable))
 	; order by
 	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
 											   (gethash tableName indexTables)))

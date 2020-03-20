@@ -110,46 +110,23 @@
     )
   )
 
-(defun where (stringWhere columnIndexes)
+(defun where (stringWhere columnIndexes table)
   (cond
-	((string= stringWhere "") (lambda (row) T))
-	(t (generateCondition #'(lambda (row)T)
+	((string= stringWhere "") table)
+	(t (let ((whereFn (generateCondition #'(lambda (row)T)
 						  (concatenate 'string "and " stringWhere)
-						  columnIndexes)
+						  columnIndexes)))
+		 (reduce (lambda (resultTable row)
+				   (cond
+					 ((funcall whereFn row) (vector-push-extend row resultTable)
+											resultTable)
+					 (t resultTable)
+					 )
+				   )
+				 table
+				 :initial-value (make-array 0 :fill-pointer 0))
+		 )
 	  )
 	)
   )
 
-; test generateCondition and other functions
-#||
-(defvar hashes (make-hash-table :test 'equal))
-(setf (gethash "col1" hashes) 0)
-(setf (gethash "col2" hashes) 1)
-
-(defvar fn (generateCondition #'(lambda (row)T) "and col1 < 4 or col1 > 8" hashes))
-
-(defvar table
-  #(#(1 "pasha")
-	#(2 "pacha")
-	#(3 "misha")
-	#(4 "asan")
-	#(5 "yter")
-	#(6 "ethernet")
-	#(7 "dima")
-	#(8 "lisp")
-	#(9 "java")
-	#(10 "asus")
-	)
-  )
-(pprint table)
-(defun selectWhere (index rows table)
-  (cond
-	((= index rows) nil)
-	(t (pprint (funcall fn (aref table index)))
-	   (selectWhere (+ index 1) rows table)
-	   )
-    )
-  )
-
-(selectWhere 0 10 table)
-||#
