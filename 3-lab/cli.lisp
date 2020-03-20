@@ -63,7 +63,9 @@
 ; key is tablename and value is index hashmap
 (defvar indexTables (make-hash-table :test 'equal))
 (maphash #'(lambda (tableName table)
-			 (setf (gethash tableName indexTables) (makeIndexHashMap (simple-table:get-row 0 table)))
+			 (setf (gethash tableName indexTables)
+				   (makeIndexHashMap (simple-table:get-row 0 table))
+				   )
 			 )
 		 tables)
 
@@ -86,6 +88,8 @@
   )
 
 (defun cutWhereClause (queryStr)
+  "cut where clause from queryStr. example:
+  'cond1 and cond2 order by col2 limit 5' -> 'cond1 and cond2'"
   (let ((curCond (getOperator queryStr)))
 	(setq queryStr (removeOperator queryStr))
 	(setq curCond (concatenate 'string curCond " " (getOperator queryStr)))
@@ -110,7 +114,7 @@
 
 (defun getWhere (queryStr)
   "cut where clause from queryStr. example:
-  'select * from table where cond1 and cond2' -> 'cond1 and cond2'"
+  'select col1, * from table where cond1 and cond2 order by col2 limit 5' -> 'cond1 and cond2'"
   (let ((startPosition (search "where" queryStr)))
 	(cond
 	  ((not startPosition) "")
@@ -168,7 +172,8 @@
   )
 
 (defun getColumns(queryStr)
-  "cut columns names from query and return tham as list"
+  "cut columns names from query and return tham as list. example:
+  'select col1, col2, * from table' -> '(col1 col2 *)"
   (let ((startPosition (search "distinct" queryStr)) (endPosition (search "from" queryStr)))
 	(setq startPosition (cond
 						  ((not startPosition) (+ (search "select" queryStr) 6))
@@ -194,23 +199,31 @@
   "this function parse query"
   (let ((columns (getColumns queryStr))
 		(tableName (getTableName queryStr))
-		(resultTable (simple-table:make-table)))
-	;(setq columns (convertToIndexes columns (gethash tableName indexTables)))
+		(resultTable (simple-table:make-table))
+		(indexes (simple-table:make-table)))
+	; take a table
 	(setq resultTable (gethash tableName tables))
+	; take a table indexes
+	(setq indexes (gethash tableName indexTables))
+	; where
 	(setq resultTable (iterate 0
 							   resultTable
 							   (simple-table:make-table)
 							   (where (getWhere queryStr) (gethash tableName indexTables))
 							   ))
+	; order by
+	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
+											   (gethash tableName indexTables)))
+							   (getOrderDirection queryStr) resultTable))
+	; select columns (or execute aggregate functions)
+	(setq resultTable (select columns indexes resultTable))
+	; distinct
 	(setq resultTable (cond
 						((not (ifDistinct queryStr)) resultTable)
 						(t (distinct resultTable)
 						   )
 						))
-	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
-											   (gethash tableName indexTables)))
-							   (getOrderDirection queryStr) resultTable))
-	(setq resultTable (selectData columns resultTable))
+	; print table
 	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
 	)
   )
