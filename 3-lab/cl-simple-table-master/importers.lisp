@@ -25,7 +25,10 @@
        (loop
           for line = (read-line s nil nil)
           until (null line)
-          collect (sequence->row (funcall filter line)))))))
+          collect (sequence->row (funcall filter line))
+		  )))
+	)
+  )
 
 (defun read-csv (filename &optional parse-elements)
   "Creates a table from a comma-separated values file."

@@ -7,7 +7,8 @@
 (load "cl-json/cl-json.asd")
 (asdf:load-system 'cl-json)
 
-; load other code
+; load all functionality code
+(load "convert.lisp")
 (load "distinct.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
@@ -17,8 +18,11 @@
 (defvar map_zal (simple-table:read-csv #P"datasource/map_zal-skl9.csv" t))
 (defvar mp_assistants (simple-table:read-csv #P"datasource/mp-assistants.csv" t))
 (defvar mp_posts (simple-table:read-csv #P"datasource/mp-posts_full.csv"))
-(defvar plenary_register_mps (simple-table:read-tsv #P"datasource/plenary_register_mps-skl9.tsv"))
+;(defvar plenary_register_mps (simple-table:read-tsv #P"datasource/plenary_register_mps-skl9.tsv"))
 (defvar mps_declarations_rada(json:decode-json (open "datasource/mps-declarations_rada.json")))
+(defvar mps_declarations_rada(json:decode-json (open "datasource/test.json")))
+(setf mps_declarations_rada (convertToTable mps_declarations_rada))
+
 ; table for testing
 (defvar test (simple-table:read-csv #P"datasource/test.csv" t))
 
@@ -27,6 +31,7 @@
 (setf (gethash "map_zal-skl9" tables) map_zal)
 (setf (gethash "mp-assistants" tables) mp_assistants)
 (setf (gethash "mp-posts_full" tables) mp_posts)
+(setf (gethash "mps-declarations_rada" tables) mps_declarations_rada)
 (setf (gethash "test" tables) test)
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
@@ -57,8 +62,8 @@
   ...
   (* -> '(0 1 2 ...))"
   (let ((tmpHashTable (make-hash-table :test 'equal)))
-	(setf (gethash "*" tmpHashTable) (generateSequence (- (array-total-size row) 1)))
-    (makeIndexes (- (array-total-size row) 1) row tmpHashTable)
+	(setf (gethash "*" tmpHashTable) (generateSequence (- (length row) 1)))
+    (makeIndexes (- (length row) 1) row tmpHashTable)
 	)
   )
 
