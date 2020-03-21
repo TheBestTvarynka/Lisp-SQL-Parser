@@ -77,6 +77,39 @@
 			 )
 		 tables)
 
+(defun len (value)
+  "returns length of value"
+  (cond
+	((not value) 3)
+	((stringp value) (length value))
+	((numberp value) (length (write-to-string value)))
+	(t 1)
+	)
+  )
+
+(defun countWidths (table)
+  "returns array that contain width of each column of the table"
+  (let ((columnsAmount (length (aref table 0))))
+    (reduce (lambda (widths row)
+  			(map 'vector
+  				 (lambda (width elem)
+  				   (max width (len elem))
+  				   )
+  				 widths
+  				 row)
+  			)
+  		  table
+  		  :initial-value (make-array columnsAmount :fill-pointer columnsAmount))
+	)
+  )
+
+; widthTables hash table where key is table name and value is array with width of each column
+(defvar widthTables (make-hash-table :test 'equal))
+(maphash #'(lambda (tableName table)
+			 (setf (gethash tableName widthTables) (countWidths (gethash tableName tables)))
+			 )
+		 tables)
+
 ; delete first row from every table, becouse first row always contain columns names
 (maphash #'(lambda (tableName table)
 			 (setf (gethash tableName tables) (delete-if (constantly t) table :start 0 :count 1))
@@ -177,13 +210,39 @@
 	)
   )
 
-(defun printTable (simple_table row)
-  "just print table function"
+(defun getFormatString (width elem)
+  "construct control-string for format function"
   (cond
-	((= row 0) (pprint (simple-table:get-row 0 simple_table)))
-    (t (printTable simple_table (- row 1))
-	(pprint (simple-table:get-row row simple_table)))
-    )
+	((stringp elem) (concatenate 'string "~" (write-to-string width) "A"))
+	((numberp elem) (concatenate 'string "~" (write-to-string width) "D"))
+	(t (concatenate 'string "~" (write-to-string width) "A"))
+	)
+  )
+
+(defun printRow (widths row)
+  "this function just print row"
+  (let ((lastWidth (aref widths (- (length widths) 1))) (lastElem (aref row (- (length row) 1))))
+    (map 'list
+  	     (lambda (width elem)
+  		   (princ (format nil (getFormatString width elem) elem))
+		   (princ "|")
+  		   )
+  		  widths
+  		  (delete-if (constantly t) row :count 1 :from-end t))
+	(princ (format nil (getFormatString lastWidth lastElem) lastElem))
+	)
+  )
+
+(defun printTable (table)
+  "just print table function in pretty way"
+  (let ((widths (countWidths table)))
+	(map 'list
+		 (lambda (row)
+		   (printRow widths row)
+		   (terpri)
+		   )
+		 table)
+	)
 )
 
 (defun query (queryStr)
@@ -211,7 +270,7 @@
 						   )
 						))
 	; print table
-	(printTable resultTable (- (simple-table:num-rows resultTable) 1))
+	(printTable resultTable)
 	)
   )
 
