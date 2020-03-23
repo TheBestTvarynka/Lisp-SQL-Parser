@@ -138,28 +138,46 @@
 		   table)
   )
 
-(defun selectAggregateFunctions (functions table indexes resultTable)
+(defun selectAggregateFunctions (functions sourceTable indexes resultTable)
   (cond
 	((not functions) resultTable)
-	(t (vector-push-extend (executeAggregateFunctions (car functions)
-													  table
-													  indexes)
-						   resultTable)
-	   (selectAggregateFunctions (cdr functions) table indexes resultTable)
-	   )
+	(t (let ((data (table-data resultTable)))
+		 (vector-push-extend (aref data 0) (executeAggregateFunctions (car functions)
+																	  data
+																	  indexes))
+		 (vector-push-extend (table-columnNames resultTable) (parseCommand (car functions)))
+		 (selectAggregateFunctions (cdr functions) sourceTable indexes resultTable)
+		 ))
 	)
   )
 
-(defun selectColumns (columns table)
-  "select columns from table"
-  (simple-table:select1 table columns)
+(defun selectColumnNames (columns columnNames)
+  (reduce (lambda (resultColumns col)
+			(vector-push-extend (aref columnNames col) resultColumns)
+			resultColumns
+			)
+		  columns
+		  :initial-value (make-array 0 :fill-pointer 0))
   )
 
-(defun select (columns tableIndexes table)
+(defun selectColumns (columns resultTable)
+  "select columns from table"
+  (let ((columnNames (table-columnNames resultTable))
+		(data (table-data resultTable)))
+	(setf (table-data resultTable) (simple-table:select1 data columns))
+	(setf (table-columnNames resultTable) (selectColumnNames columns columnNames))
+	resultTable
+	)
+  
+  )
+
+(defun select (columns tableIndexes resultTable)
   (cond
 	((string= (parseCommand (car columns)) "")
-	 (selectColumns (convertToIndexes columns tableIndexes) table))
-	(t (selectAggregateFunctions columns table tableIndexes (make-array 0 :fill-pointer 0)))
+	 (selectColumns (convertToIndexes columns tableIndexes) resultTable))
+	(t (selectAggregateFunctions columns resultTable tableIndexes (make-table :tableName "Result"
+																			  :columnNames #()
+																			  :data #())))
 	)
   )
 

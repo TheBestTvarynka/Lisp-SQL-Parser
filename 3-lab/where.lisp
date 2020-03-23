@@ -110,21 +110,24 @@
     )
   )
 
-(defun where (stringWhere columnIndexes table)
+(defun where (stringWhere columnIndexes resultTable)
   (cond
-	((string= stringWhere "") table)
+	((string= stringWhere "") resultTable)
 	(t (let ((whereFn (generateCondition #'(lambda (row)T)
 						  (concatenate 'string "and " stringWhere)
-						  columnIndexes)))
-		 (reduce (lambda (resultTable row)
-				   (cond
-					 ((funcall whereFn row) (vector-push-extend row resultTable)
-											resultTable)
-					 (t resultTable)
-					 )
-				   )
-				 table
-				 :initial-value (make-array 0 :fill-pointer 0))
+						  columnIndexes))
+			 (data (table-data resultTable)))
+		 (setf data (reduce (lambda (resultTable row)
+							   (cond
+								 ((funcall whereFn row) (vector-push-extend row resultTable)
+														resultTable)
+								 (t resultTable)
+								 )
+							   )
+							 data
+							 :initial-value (make-array 0 :fill-pointer 0)))
+		 (setf (table-data resultTable) data)
+		 resultTable
 		 )
 	  )
 	)

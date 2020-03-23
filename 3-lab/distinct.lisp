@@ -46,8 +46,9 @@
     )
   )
 
-(defun distinct (table)
-  (selectDistinct 0 (sortTable table))
+(defun distinct (resultTable)
+  (setf (table-data resultTable) (selectDistinct 0 (sortTable (table-data resultTable))))
+  resultTable
   )
 
 #||

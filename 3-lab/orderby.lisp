@@ -13,18 +13,22 @@
 	)
   )
 
-(defun orderBy (index order table)
+(defun orderBy (index order resultTable)
   (setq order (cond
 				((string= order "asc") t)
 				(t nil)
 				))
-  (cond
-	((not index) table)
-	(t (setq table (sort table (orderVectors index (aref (aref table 0) index))))
-	   (cond
-	     ((not order) (reverse table))
-	     (t table)
-	     ))
+  (let ((data (table-data resultTable)))
+    (setf data (cond
+			     ((not index) data)
+			     (t (setq data (sort data (orderVectors index (aref (aref data 0) index))))
+		   		    (cond
+				      ((not order) (reverse data))
+				      (t data)
+				      ))
+			     ))
+	(setf (table-data resultTable) data)
+	resultTable
 	)
   )
 #||

@@ -1,81 +1,19 @@
 
-(require 'asdf)
-; load package for .csv and .tsv parsing
-(load "cl-simple-table-master/cl-simple-table.asd")
-(asdf:load-system 'cl-simple-table)
-; load package for .json parsing
-(load "cl-json/cl-json.asd")
-(asdf:load-system 'cl-json)
-
 ; load all functionality code
-(load "convert.lisp")
+(load "importer.lisp")
 (load "distinct.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
 (load "select.lisp")
 
-; load parse files and save data to variables
-(defvar map_zal (simple-table:read-csv #P"datasource/map_zal-skl9.csv" t))
-(defvar mp_assistants (simple-table:read-csv #P"datasource/mp-assistants.csv" t))
-(defvar mp_posts (simple-table:read-csv #P"datasource/mp-posts_full.csv"))
-;(defvar plenary_register_mps (simple-table:read-tsv #P"datasource/plenary_register_mps-skl9.tsv"))
-(defvar mps_declarations_rada(json:decode-json (open "datasource/mps-declarations_rada.json")))
-(defvar mps_declarations_rada(json:decode-json (open "datasource/test.json")))
-(setf mps_declarations_rada (convertToTable mps_declarations_rada))
-
-; table for testing
-(defvar test (simple-table:read-csv #P"datasource/test.csv" t))
-
-; tables - hashmap where key is tablename and value is table
+; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
-(setf (gethash "map_zal-skl9" tables) map_zal)
-(setf (gethash "mp-assistants" tables) mp_assistants)
-(setf (gethash "mp-posts_full" tables) mp_posts)
-(setf (gethash "mps-declarations_rada" tables) mps_declarations_rada)
-(setf (gethash "test" tables) test)
+(setf (gethash "map_zal-skl9" tables) (readTableFromFile "datasource/map_zal-skl9.csv"))
+(setf (gethash "mp-assistants" tables) (readTableFromFile "datasource/mp-assistants.csv"))
+(setf (gethash "mp-posts_full" tables) (readTableFromFile "datasource/mp-posts_full.csv"))
+(setf (gethash "mps-declarations_rada" tables) (readTableFromFile "datasource/mps-declarations_rada.json"))
+(setf (gethash "test" tables) (readTableFromFile "datasource/test.csv"))
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
-
-(defun generateSequence (n)
-  "generate sequence like '(0 1 2 3 ... )"
-  (cond ((< n 0) '())
-	((= n 0) '(0))
-	(t (append
-		 (generateSequence (- n 1))
-		 (list n)))
-	)
-  )
-
-(defun makeIndexes (i row hashTable)
-  "make hashMap there key is column name and value is its sequence number.
-  like: (col1 -> '(0))
-  		(col2 -> '(1)) ..."
-  (cond ((< i 0) hashTable)
-		(t (setf (gethash (aref row i) hashTable) (list i))
-		   (makeIndexes (- i 1) row hashTable)
-		  )
-		)
-  )
-
-(defun makeIndexHashMap (row)
-  "make full hashmap with indexes. like:
-  (col1 -> '(0))
-  ...
-  (* -> '(0 1 2 ...))"
-  (let ((tmpHashTable (make-hash-table :test 'equal)))
-	(setf (gethash "*" tmpHashTable) (generateSequence (- (length row) 1)))
-    (makeIndexes (- (length row) 1) row tmpHashTable)
-	)
-  )
-
-; indexTables - hash table that contain all index hashmaps (index hashmap for each table)
-; key is tablename and value is index hashmap
-(defvar indexTables (make-hash-table :test 'equal))
-(maphash #'(lambda (tableName table)
-			 (setf (gethash tableName indexTables)
-				   (makeIndexHashMap (simple-table:get-row 0 table))
-				   )
-			 )
-		 tables)
 
 (defun len (value)
   "returns length of value"
@@ -102,19 +40,6 @@
   		  :initial-value (make-array columnsAmount :fill-pointer columnsAmount))
 	)
   )
-
-; widthTables hash table where key is table name and value is array with width of each column
-(defvar widthTables (make-hash-table :test 'equal))
-(maphash #'(lambda (tableName table)
-			 (setf (gethash tableName widthTables) (countWidths (gethash tableName tables)))
-			 )
-		 tables)
-
-; delete first row from every table, becouse first row always contain columns names
-(maphash #'(lambda (tableName table)
-			 (setf (gethash tableName tables) (delete-if (constantly t) table :start 0 :count 1))
-			 )
-		 tables)
 
 (defun getTableName (queryStr)
   "cut table name from query"
@@ -225,7 +150,7 @@
     (map 'list
   	     (lambda (width elem)
   		   (princ (format nil (getFormatString width elem) elem))
-		   (princ "|")
+		   (princ " | ")
   		   )
   		  widths
   		  (delete-if (constantly t) row :count 1 :from-end t))
@@ -233,33 +158,39 @@
 	)
   )
 
-(defun printTable (table)
+(defun printTable (resultTable)
   "just print table function in pretty way"
-  (let ((widths (countWidths table)))
-	(map 'list
-		 (lambda (row)
-		   (printRow widths row)
-		   (terpri)
-		   )
-		 table)
-	)
-)
+	(let ((widths (countWidths (formatTable resultTable))))
+	  (printRow widths (table-columnNames resultTable))
+	  (terpri)
+	  (princ (format nil "~v@{~A~:*~}" (+ (reduce (lambda (sum width)
+										            (+ sum width)
+										            )
+										          widths) (* (- (length widths) 1) 3)) #\-))
+	  (terpri)
+	  (map 'list
+		   (lambda (row)
+		     (printRow widths row)
+		     (terpri)
+			 )
+		   (table-data resultTable))
+		)
+  )
 
 (defun query (queryStr)
   "this function parse query"
   (let ((columns (getColumns queryStr))
 		(tableName (getTableName queryStr))
-		(resultTable (simple-table:make-table))
-		(indexes (simple-table:make-table)))
+		(resultTable (make-table))
+		(indexes #()))
 	; take a table
-	(setq resultTable (gethash tableName tables))
+	(setq resultTable (copy-table (gethash tableName tables)))
 	; take a table indexes
-	(setq indexes (gethash tableName indexTables))
+	(setq indexes (makeIndexHashMap (table-columnNames resultTable)))
 	; where
-	(setq resultTable (where (getWhere queryStr) (gethash tableName indexTables) resultTable))
+	(setq resultTable (where (getWhere queryStr) indexes resultTable))
 	; order by
-	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr)
-											   (gethash tableName indexTables)))
+	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr) indexes))
 							   (getOrderDirection queryStr) resultTable))
 	; select columns (or execute aggregate functions)
 	(setq resultTable (select columns indexes resultTable))
