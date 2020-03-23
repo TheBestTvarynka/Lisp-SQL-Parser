@@ -1,5 +1,6 @@
 
 (defun getComparator (value)
+  "returns function for comparing two element that have the same type as value"
   (cond
 	((numberp value) #'<)
 	((stringp value) #'string<)
@@ -8,6 +9,7 @@
   )
 
 (defun getEqual (value)
+  "returns function that check if two element are qual. this elements have the same type as value"
   (cond
 	((numberp value) #'=)
 	((stringp value) #'string=)
@@ -16,6 +18,7 @@
   )
 
 (defun compareVectors (index vector1 vector2)
+  "this function compare vectors"
   (cond
     ((= index (array-total-size vector1)) nil)
     ((funcall (getEqual(aref vector1 index)) (aref vector1 index) (aref vector2 index)
@@ -26,17 +29,23 @@
       )
     )
   )
-(defun compareV (vector1 vector2)(compareVectors 0 vector1 vector2))
+(defun compareV (vector1 vector2)
+  "run capmpateVectors function"
+  (compareVectors 0 vector1 vector2)
+  )
 
 (defun sortTable (table)
+  "sort table"
   (sort table #'compareV)
   )
 
 (defun delete-nth (index arr)
+  "delete element from 'arr' that have index 'index'"
   (delete-if (constantly t) arr :start index :count 1)
   )
 
 (defun selectDistinct (index table)
+  "select unique rows from sorted table"
   (cond
     ((= (+ index 1) (simple-table:num-rows table)) table)
     ((equalp (simple-table:get-row index table) (simple-table:get-row (+ index 1) table))
@@ -47,21 +56,8 @@
   )
 
 (defun distinct (resultTable)
+  "select distinct"
   (setf (table-data resultTable) (selectDistinct 0 (sortTable (table-data resultTable))))
   resultTable
   )
-
-#||
-(require 'asdf)
-(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
-(asdf:load-system 'cl-simple-table)
-
-(defvar table (simple-table:read-csv #P"test.csv" t))
-(pprint table)
-(terpri)
-(pprint (sortTable table))
-
-(terpri)
-(pprint (distinct table))
-||#
 

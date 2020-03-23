@@ -1,5 +1,6 @@
 
 (defun getComparator (value)
+  "returns function for comparing two element that have the same type as value"
   (cond
         ((numberp value) #'<)
         ((stringp value) #'string<)
@@ -8,12 +9,14 @@
   )
 
 (defun orderVectors (index value)
+  "create function (lambda) that compare two vectors by one element with index 'index'"
   (let ((comparator (getComparator value)))
 	(lambda (vector1 vector2)(funcall comparator (aref vector1 index) (aref vector2 index)))
 	)
   )
 
 (defun orderBy (index order resultTable)
+  "order table by column with index 'index' and order 'order'"
   (setq order (cond
 				((string= order "asc") t)
 				(t nil)
@@ -31,13 +34,4 @@
 	resultTable
 	)
   )
-#||
-(require 'asdf)
-(load "/home/qkation/Documents/LispFunctionalProgramming/3-lab/cl-simple-table-master/cl-simple-table.asd")
-(asdf:load-system 'cl-simple-table)
 
-(defvar table (simple-table:read-csv #P"datasourse/test.csv" t))
-(pprint table)
-(terpri)
-(pprint (orderBy 2 t table)) 
-;||#

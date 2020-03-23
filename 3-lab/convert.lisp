@@ -40,12 +40,3 @@
 	)
   )
 
-#||
-(require 'asdf)
-(load "cl-json/cl-json.asd")
-(asdf:load-system 'cl-json)
-
-(defvar json (json:decode-json (open "datasource/test.json")))
-(pprint (convertToTable json))
-;||#
-

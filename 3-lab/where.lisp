@@ -1,15 +1,20 @@
 
 (defun generateConditionAND (fn1 fn2)
+  "returns function that check if fn1 statement AND fn2 statement are true"
   (lambda (row)(and (funcall fn1 row) (funcall fn2 row))
 	)
   )
 
 (defun generateConditionOR (fn1 fn2)
+  "returns function that check if fn1 statement OR fn2 statement is true"
   (lambda (row)(or (funcall fn1 row) (funcall fn2 row))
 	)
   )
 
-(defun numeric-string-p (str)(ignore-errors (parse-integer str)))
+(defun numeric-string-p (str)
+  "check if str is number"
+  (ignore-errors (parse-integer str))
+  )
 
 (defun parse-value (str)
   (cond
@@ -19,6 +24,7 @@
   )
 
 (defun getFunction (fnStr value)
+  "get function corresponds to the fnStr and value type"
   (cond
 	((string= fnStr "=")
 	 (cond
@@ -46,6 +52,7 @@
   )
 
 (defun findNextOperator (stringWhere)
+  "returns position of the next operator in where statement"
   (let ((andPosition (search "and" stringWhere)) (orPosition (search "or" stringWhere)))
 	  (setq andPosition (if (not andPosition) (length stringWhere)andPosition))
 	  (setq orPosition (if (not orPosition) (length stringWhere)orPosition))
@@ -54,6 +61,7 @@
   )
 
 (defun removeOperator (stringWhere)
+  "remove one first word from stringWhere"
   (setf stringWhere (string-left-trim " " stringWhere))
   (let ((spasePosition (position #\SPACE stringWhere)))
 	(setq spasePosition (if (not spasePosition)(length stringWhere)spasePosition))
@@ -62,11 +70,14 @@
   )
 
 (defun removeCondition (stringWhere)
+  "remove one first condition from stringWhere. example:
+  'col > 6 and col < 25' -> 'and col < 25'"
   (setf stringWhere (string-left-trim " " stringWhere))
   (string-left-trim " " (subseq stringWhere (findNextOperator stringWhere)))
   )
 
 (defun getOperator (stringWhere)
+  "return first word from stringWhere"
   (setf stringWhere (string-left-trim " " stringWhere))
   (let ((spasePosition (position #\SPACE stringWhere)))
 	(setq spasePosition (if (not spasePosition)(length stringWhere)spasePosition))
@@ -75,11 +86,14 @@
   )
 
 (defun getCondition (stringWhere)
+  "return first condition from stringWhere. example:
+  'col > 6 and col < 25' -> 'col > 6'"
   (setf stringWhere (removeOperator stringWhere))
   (subseq stringWhere 0 (findNextOperator stringWhere))
   )
 
 (defun getFnCondition (stringWhere columnIndexes)
+  "return function that represent one where condition"
   (let (
 		(column (getOperator stringWhere))
 		(fn (getOperator (removeOperator stringWhere)))
@@ -94,6 +108,8 @@
   )
 
 (defun generateCondition (fn stringWhere columnIndexes)
+  "make one function from whole where condition.
+  this function takes one argument - row and returns t or nil"
   (setf fn (cond
 			 ((string= (getOperator stringWhere) "and")
 			  (generateConditionAND fn (getFnCondition (getCondition stringWhere) columnIndexes))
@@ -111,6 +127,7 @@
   )
 
 (defun where (stringWhere columnIndexes resultTable)
+  "where"
   (cond
 	((string= stringWhere "") resultTable)
 	(t (let ((whereFn (generateCondition #'(lambda (row)T)

@@ -1,4 +1,4 @@
-
+; load additional packages
 (require 'asdf)
 (load "cl-simple-table-master/cl-simple-table.asd")
 (asdf:load-system 'cl-simple-table)
@@ -23,6 +23,7 @@
   )
 
 (defun formatTable (resultTable)
+  "join columnNames and table data. as result we have table where first row is column names"
   (let ((titleRow (make-array 1 :initial-element (table-columnNames resultTable))))
 	(concatenate 'vector titleRow (table-data resultTable))
 	)
@@ -54,14 +55,9 @@
 	(subseq filename slashPosition dotPosition)
 	)
   )
-#||
-(pprint (getTableName "datasource/test.csv"))
-(pprint (getTableName "test.csv"))
-(pprint (getTableName "datasource/test"))
-(pprint (getTableName "test"))
-(exit)
-;||#
+
 (defun readTableFromFile (filename &optional filetype)
+  "reads table from file"
   (setf filetype (cond
 				   ((not filetype) (getFileType filename))
 				   (t filetype)
@@ -76,10 +72,6 @@
 	(t nil)
 	)
   )
-#||
-(pprint (readTableFromFile "datasource/test.csv" "csv"))
-(pprint (readTableFromFile "datasource/test.json"))
-;||#
 
 (defun generateSequence (n)
   "generate sequence like '(0 1 2 3 ... )"

@@ -22,6 +22,7 @@
   )
 
 (defun getComparator (value)
+  "returns function for comparing two element that have the same type as value"
   (cond
         ((numberp value) #'<)
         ((stringp value) #'string<)
@@ -87,17 +88,6 @@
 	(t "Error: Wrong arguments for max() function!")
 	)
   )
-#||
-(pprint (avgRows '(0) #(
-						  #(1 9 3)
-						  #(4 nil 6)
-						  #(7 8 9)
-						  #(10 nil 12)
-						  )
-				   )
-		)+
-(exit)
-;||#
 
 ; hashmap that contain aggregate functions where key is afunctionName and value is a funciton
 (defvar aggregateFunctions (make-hash-table :test 'equal))
@@ -139,6 +129,7 @@
   )
 
 (defun selectAggregateFunctions (functions sourceTable indexes resultTable)
+  "execute all aggregate functions and collect result in a resultTable"
   (cond
 	((not functions) resultTable)
 	(t (let ((data (table-data resultTable)))
@@ -152,6 +143,7 @@
   )
 
 (defun selectColumnNames (columns columnNames)
+  "select column names. columns - indexes of columns. columnNames - array with column names"
   (reduce (lambda (resultColumns col)
 			(vector-push-extend (aref columnNames col) resultColumns)
 			resultColumns
@@ -172,6 +164,7 @@
   )
 
 (defun select (columns tableIndexes resultTable)
+  "select"
   (cond
 	((string= (parseCommand (car columns)) "")
 	 (selectColumns (convertToIndexes columns tableIndexes) resultTable))
@@ -180,26 +173,4 @@
 																			  :data #())))
 	)
   )
-
-#||
-(defvar indexes (make-hash-table :test 'equal))
-(setf (gethash "col1" indexes) '(0))
-(setf (gethash "col2" indexes) '(1))
-(setf (gethash "col3" indexes) '(2))
-(setf (gethash "*" indexes) '(0 1 2))
-
-(pprint (select '("col1" "col2" "*") indexes #(#(1 2 3)
-								#(4 5 6)
-								#(7 8 9)
-								#(10 11 12))
-		  )
-  )
-
-(pprint (select '("max(col1)" "avg(col2)" "count(*)") indexes #(#(1 2 3)
-								#(4 5 6)
-								#(7 8 9)
-								#(10 11 12))
-		  )
-  )
-;||#
 
