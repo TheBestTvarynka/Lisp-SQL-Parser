@@ -28,6 +28,39 @@
 	)
   )
 
+(defun getJoinTable (queryStr)
+  (let ((joinPosition (search "join" queryStr)))
+	(cond
+	  ((not joinPosition) "")
+	  (t (getOperator (subseq queryStr (+ joinPosition 4))))
+	  )
+	)
+  )
+
+(defun getJoinType (queryStr)
+  (let ((joinPosition (search "join" queryStr)))
+	(cond
+	  ((not joinPosition) "")
+	  (t (setq queryStr (removeOperator (subseq queryStr (+ (search "from" queryStr) 5))))
+		 (setq joinPosition (search "join" queryStr))
+		 (string-trim " " (subseq queryStr 0 joinPosition)))
+	  )
+	)
+  )
+
+(defun getJoinCondition (queryStr)
+  (subseq queryStr () ())
+  )
+#||
+(pprint (getJoinType "select * from table1 inner join table2 on table1.col1 = table2.col2"))
+(pprint (getJoinType "select * from table1 left join table2 on table1.col1 = table2.col2"))
+(pprint (getJoinType "select * from table1 full outer join table2 on table1.col1 = table2.col2"))
+(exit)
+;||#
+(defun join (queryStr currentTable)
+  ()
+  )
+
 (defun cutWhereClause (queryStr)
   "cut where clause from queryStr. example:
   'cond1 and cond2 order by col2 limit 5' -> 'cond1 and cond2'"
@@ -65,6 +98,7 @@
   )
 
 (defun getOrderBy (queryStr)
+  "return column by which we sort the table"
   (let ((startPosition (search "order by" queryStr)))
 	(cond
 	  ((not startPosition) "")
@@ -74,6 +108,7 @@
   )
 
 (defun getOrderDirection (queryStr)
+  "return order direction: 'desc' or 'asc' or ''"
   (let ((startPosition (search "order by" queryStr))
 		(direction ""))
 	(cond
@@ -118,6 +153,8 @@
 		(indexes #()))
 	; take a table
 	(setq resultTable (copy-table (gethash tableName tables)))
+	; join other tables (if required)
+	(setq resultTable (join queryStr resultTable))
 	; take a table indexes
 	(setq indexes (makeIndexHashMap (table-columnNames resultTable)))
 	; where
