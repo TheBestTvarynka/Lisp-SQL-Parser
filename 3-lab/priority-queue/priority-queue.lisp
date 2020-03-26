@@ -19,6 +19,23 @@
 ;;;;  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;;;;  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+(defpackage :priority-queue
+  (:use :cl)
+  (:nicknames :pqueue)
+  (:export
+   #:make-pqueue
+   #:pqueue-p
+   #:pqueue-length
+   #:pqueue-empty-p
+   #:pqueue-push
+   #:pqueue-pop
+   #:pqueue-front
+   #:pqueue-front-value
+   #:pqueue-front-key
+   #:pqueue-clear))
+
+(in-package :priority-queue)
+
 (defstruct (pqueue (:constructor %make-pqueue)
 		   (:print-function print-pqueue))
   length predicate keys values key-type value-type)
