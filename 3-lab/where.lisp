@@ -1,3 +1,4 @@
+(load "testprocessing.lisp")
 
 (defun generateConditionAND (fn1 fn2)
   "returns function that check if fn1 statement AND fn2 statement are true"
@@ -60,29 +61,11 @@
 	)
   )
 
-(defun removeOperator (stringWhere)
-  "remove one first word from stringWhere"
-  (setf stringWhere (string-left-trim " " stringWhere))
-  (let ((spasePosition (position #\SPACE stringWhere)))
-	(setq spasePosition (if (not spasePosition)(length stringWhere)spasePosition))
-	(string-left-trim " " (subseq stringWhere spasePosition))
-	)
-  )
-
 (defun removeCondition (stringWhere)
   "remove one first condition from stringWhere. example:
   'col > 6 and col < 25' -> 'and col < 25'"
   (setf stringWhere (string-left-trim " " stringWhere))
   (string-left-trim " " (subseq stringWhere (findNextOperator stringWhere)))
-  )
-
-(defun getOperator (stringWhere)
-  "return first word from stringWhere"
-  (setf stringWhere (string-left-trim " " stringWhere))
-  (let ((spasePosition (position #\SPACE stringWhere)))
-	(setq spasePosition (if (not spasePosition)(length stringWhere)spasePosition))
-	(subseq stringWhere 0 spasePosition)
-	)
   )
 
 (defun getCondition (stringWhere)
@@ -126,13 +109,14 @@
     )
   )
 
-(defun where (stringWhere columnIndexes resultTable)
+(defun where (stringWhere resultTable)
   "where"
+  (setf stringWhere (string-left-trim " " stringWhere))
   (cond
 	((string= stringWhere "") resultTable)
 	(t (let ((whereFn (generateCondition #'(lambda (row)T)
 						  (concatenate 'string "and " stringWhere)
-						  columnIndexes))
+						  (table-columnIndexes resultTable)))
 			 (data (table-data resultTable)))
 		 (setf data (reduce (lambda (resultTable row)
 							   (cond

@@ -3,174 +3,206 @@
 (asdf:load-system 'cl-simple-table)
 ; maybe instead of functions from this package I will write my own function
 
-(defun countRows (column table)
-  "count aggregate funciton"
+(load "distinct.lisp")
+(load "stack/stack.lisp")
+
+(defun generateValue (value)
+  (concatenate 'string "[value:" (write-to-string value) "]")
+  ;(lambda (row)
+	;value
+	;)
+  )
+
+(defun generateColumnValue (colname indexes)
+  (concatenate 'string "[column:" colname "]")
+  ;(setf colname (gethash colname indexes))
+  ;(lambda (row)
+	;(aref row colname)
+	;)
+  )
+
+(defun ifOperator (ch)
   (cond
-	((= (length column) 1) (let ((index (nth 0 column)))
-	 						 (reduce (lambda (cnt elem)
-									 (cond
-									   ((not (aref elem index)) cnt)
-									   (t (+ cnt 1))
-									   )
-									 )
-									 table
-									 :initial-value 0)
-							 ))
-	((= (length column) (length (aref table 0))) (length table))
-	(t "Error: Wrong arguments for count() function!")
+	((or (char= #\+ ch)
+		 (char= #\- ch)
+		 (char= #\* ch)
+		 (char= #\/ ch)
+		 (char= #\( ch)
+		 (char= #\) ch)
+		 (char= #\, ch)) t)
+	(t nil)
 	)
   )
 
-(defun getComparator (value)
-  "returns function for comparing two element that have the same type as value"
+(defun getPriority (fn)
   (cond
-        ((numberp value) #'<)
-        ((stringp value) #'string<)
-        (t (lambda (v1 v2)T))
-        )
-  )
-
-(defun findMax (index table)
-  "this finction finds max value in given column"
-  (reduce (lambda (maxValue row)
-			(let ((elem (aref row index)))
-   			  (cond
-   			    ; if maxValue is nil and elem is not nil
-   			    ((and (not maxValue) elem) elem)
-   			    ; if elem is nil then we return maxValue
-   			    ((not elem) maxValue)
-   			    ; standart case: we compare two numbers. if maxValue < elem, then return elem
-   			    ((funcall (getComparator elem) maxValue elem) elem)
-   			    ; else return maxValue
-   			    (t maxValue)
-   			    )
-			  )
-			)
-		  table
-		  :initial-value nil)
-  )
-
-(defun maxRows (column table)
-  "max aggregate funciton"
-  (cond
-	((= (length column) 1) (findMax (nth 0 column) table))
-	(t "Error: Wrong arguments for max() function!")
+	((string= fn "=") 10)
+	((or (string= fn "*")
+		 (string= fn "/")) 8)
+	((or (string= fn "+")
+		 (string= fn "-")) 7)
+	((string= fn "(") 6)
+	(t 9)
 	)
   )
 
-(defun findAverage (index table)
-  "this funciton determine average value in given column"
-  (let ((sum 0) (amount 0))
-	(setq sum (reduce (lambda (sum row)
-					   (let ((elem (aref row index)))
-						 (cond
-						   ((not elem) sum)
-						   (t (setq amount (+ amount 1))
-							  (+ sum elem))
-						   )
-						 )
-			           )
-					 table
-					 :initial-value 0))
-	(pprint sum)
-	(pprint amount)
+(defun insertClosingBracket (operators stack)
+  (let ((topOperator (stack-top stack)))
 	(cond
-	  ((= amount 0) nil)
-	  (t (/ (float sum) amount))
+	  ((string= topOperator "(")
+	   (stack-pop stack)
+	   operators)
+	  (t (insertClosingBracket (append operators (list topOperator)) (stack-pop stack)))
 	  )
 	)
   )
 
-(defun avgRows (column table)
-  "average aggregate funciton"
+(defun insertComa (operators stack)
+  (let ((topOperator (stack-top stack)))
+	(cond
+	  ((stack-is-empty stack) operators)
+	  ((string= topOperator "(") operators)
+	  (t (insertComa (append operators (list topOperator)) (stack-pop stack)))
+	  )
+	)
+  )
+
+(defun insertOperator (operator operators stack)
+  (let ((topOperator (stack-top stack)))
+	(cond
+	  ((string= operator "(")
+	   (stack-push operator stack)
+	   operators)
+	  ((stack-is-empty stack)
+	   (stack-push operator stack)
+	   operators)
+	  ((>= (getPriority topOperator) (getPriority operator))
+	   (insertOperator operator (append operators (list topOperator)) (stack-pop stack)))
+	  (t (stack-push operator stack)
+		 operators)
+	  )
+	)
+  )
+
+(defun insertOperatorInStack (operator operators stack)
+  (let ((topOperator (stack-top stack)))
+	(cond
+	  ((string= operator ")") (insertClosingBracket operators stack))
+	  ((string= operator ",") (insertComa operators stack))
+	  (t (insertOperator operator operators stack))
+	  )
+	)
+  )
+
+(defun clearStack (operators stack)
   (cond
-	((= (length column) 1) (findAverage (nth 0 column) table))
-	(t "Error: Wrong arguments for max() function!")
+	((stack-is-empty stack)
+	 ;(pprint "empty")
+	 operators)
+	(t (clearStack (append operators (list (stack-top stack))) (stack-pop stack)))
 	)
   )
 
-; hashmap that contain aggregate functions where key is afunctionName and value is a funciton
-(defvar aggregateFunctions (make-hash-table :test 'equal))
-(setf (gethash "count" aggregateFunctions) #'countRows)
-(setf (gethash "max" aggregateFunctions) #'maxRows)
-(setf (gethash "avg" aggregateFunctions) #'avgRows)
-
-(defun convertToIndexes (columns indexes)
-  "convert input list of columns names in list of indexes; like:
-  '(col1 col2 col4 *) -> '(1 2 4 1 2 3 4 5 6)"
-  (reduce #'(lambda(lst column)
-                        (append lst (gethash column indexes))
-                        )
-                columns
-                :initial-value ()
-     )
-  )
-
-(defun parseCommand (commandQuery) 
-  "cut command name" 
-  (let ((openBracketPosition (position #\( commandQuery))) 
-    (setq openBracketPosition (cond 
-                                ((not openBracketPosition) 0) 
-                                (t openBracketPosition) 
-                                )) 
-    (subseq commandQuery 0 openBracketPosition) 
-    ) 
-  ) 
- 
-(defun cutParameter (command) 
-  "cut command parameter (text inside '()')" 
-  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t)) 
-  )
-
-(defun executeAggregateFunctions (funcitonStr table indexes)
-  (funcall (gethash (parseCommand funcitonStr) aggregateFunctions)
-		   (convertToIndexes (list (cutParameter funcitonStr)) indexes)
-		   table)
-  )
-
-(defun selectAggregateFunctions (functions sourceTable indexes resultTable)
-  "execute all aggregate functions and collect result in a resultTable"
+(defun ifNameChar (ch)
+  (setf ch (char-int ch))
   (cond
-	((not functions) resultTable)
-	(t (let ((data (table-data resultTable)))
-		 (vector-push-extend (aref data 0) (executeAggregateFunctions (car functions)
-																	  data
-																	  indexes))
-		 (vector-push-extend (table-columnNames resultTable) (parseCommand (car functions)))
-		 (selectAggregateFunctions (cdr functions) sourceTable indexes resultTable)
-		 ))
+	((or (and (>= ch 48) (<= ch 57))
+		 (and (>= ch 65) (<= ch 90))
+		 (and (>= ch 97) (<= ch 122))) t)
+	(t nil)
 	)
   )
 
-(defun selectColumnNames (columns columnNames)
-  "select column names. columns - indexes of columns. columnNames - array with column names"
-  (reduce (lambda (resultColumns col)
-			(vector-push-extend (aref columnNames col) resultColumns)
-			resultColumns
-			)
-		  columns
-		  :initial-value (make-array 0 :fill-pointer 0))
-  )
-
-(defun selectColumns (columns resultTable)
-  "select columns from table"
-  (let ((columnNames (table-columnNames resultTable))
-		(data (table-data resultTable)))
-	(setf (table-data resultTable) (simple-table:select1 data columns))
-	(setf (table-columnNames resultTable) (selectColumnNames columns columnNames))
-	resultTable
+(defun readName (selectStr operators stack indexes)
+  ;(pprint "readName")
+  ;(pprint selectStr)
+  ;(sleep 2)
+  (let ((nameEnd (position-if-not #'ifNameChar selectStr)))
+	(cond
+	  ((not nameEnd)
+	   ;(pprint "readname - column")
+	   (setf operators (append operators (list (generateColumnValue selectStr indexes))))
+	   (parseSelect "" operators stack indexes))
+	  ((char= #\( (char selectStr nameEnd))
+	   ;(pprint "readname - function")
+	   (let ((funName (subseq selectStr 0 nameEnd)))
+	      (setf operators (insertOperatorInStack funName operators stack))
+	      (setf selectStr (string-left-trim " " (subseq selectStr nameEnd)))
+	      (parseSelect selectStr operators stack indexes)
+		  ))
+	  (t (pprint "readname - column")
+		 (setf operators (append operators (list (generateColumnValue (subseq selectStr 0 nameEnd) indexes))))
+		 (setf selectStr (string-left-trim " " (subseq selectStr nameEnd)))
+		 (parseSelect selectStr operators stack indexes))
+	  )
 	)
-  
   )
 
-(defun select (columns tableIndexes resultTable)
-  "select"
+(defun readStringValue (selectStr operators stack indexes)
+  ;(pprint "readStringValue")
+  ;(pprint selectStr)
+  ;(sleep 2)
+   (let ((value (subseq selectStr 1 (position #\' selectStr :start 1))))
+	 (setf selectStr (string-left-trim " " (subseq selectStr (+ (length value) 2))))
+	 (setf operators (append operators (list (generateValue value))))
+	 (parseSelect selectStr operators stack indexes)
+	 )
+  )
+
+(defun readIntValue (selectStr operators stack indexes)
+  ;(pprint "readIntValue")
+  ;(pprint selectStr)
+  ;(sleep 2)
+  (let ((value (subseq selectStr 0 (position-if-not #'digit-char-p selectStr))))
+	(setf selectStr (string-left-trim " " (subseq selectStr (length value))))
+	(setf operators (append operators (list (generateValue (read-from-string value)))))
+	(parseSelect selectStr operators stack indexes)
+	)
+  )
+
+(defun readOperator (selectStr operators stack indexes)
+  ;(pprint "readOperator")
+  ;(pprint selectStr)
+  ;(sleep 2)
+  (let ((ch (char selectStr 0)))
+    (setf selectStr (string-left-trim " " (subseq selectStr 1)))
+    (parseSelect selectStr (insertOperatorInStack ch operators stack) stack indexes)
+	)
+  )
+
+(defun parseSelect (selectStr operators stack indexes)
+  ;(pprint "in parseSelect")
+  ;(pprint selectStr)
+  ;(pprint operators)
+  ;(pprint stack)
   (cond
-	((string= (parseCommand (car columns)) "")
-	 (selectColumns (convertToIndexes columns tableIndexes) resultTable))
-	(t (selectAggregateFunctions columns resultTable tableIndexes (make-table :tableName "Result"
-																			  :columnNames #()
-																			  :data #())))
+	((string= selectStr "")
+	 ;(pprint "query is empty")
+     (clearStack operators stack))
+	(t
+      (let ((ch (char selectStr 0)))
+	    ;(pprint ch)
+        (cond
+  	      ((digit-char-p ch)
+		   (readIntValue selectStr operators stack indexes))
+  	      ((char= #\' ch)
+		   (readStringValue selectStr operators stack indexes))
+          ((ifOperator ch)
+		   (readOperator selectStr operators stack indexes))
+	      ((ifNameChar ch)
+		   (readName selectStr operators stack indexes))
+	      (t nil)
+  	      )
+		)
+	  )
 	)
   )
+
+;(exit)
+(pprint (parseSelect "1 + 3*(fn('value', id, 3) +2) - 4" '() (make-stack) nil))
+(pprint (parseSelect "1 + 3*(fn('value', 43 + id * 6, 3) +2) - 4" '() (make-stack) nil))
+(pprint (parseSelect "1 + 3*(fn('value', 43 + count(id) * 6, 3) +2) - 4" '() (make-stack) nil))
+(pprint (parseSelect "concat(name, ' ', description)" '() (make-stack) nil))
+(pprint (parseSelect "col1" '() (make-stack) nil))
+(pprint (parseSelect "2 +id" '() (make-stack) nil))
 

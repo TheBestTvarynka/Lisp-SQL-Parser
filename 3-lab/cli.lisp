@@ -3,8 +3,8 @@
 (load "priority-queue/priority-queue.asd")
 (asdf:load-system 'priority-queue)
 ; load all functionality code
+(load "testprocessing.lisp")
 (load "importer.lisp")
-(load "distinct.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
 (load "select.lisp")

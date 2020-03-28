@@ -11,13 +11,47 @@
 (defstruct table
   tableName
   columnNames
+  columnIndexes
   data
+  )
+
+(defun generateSequence (n)
+  "generate sequence like '(0 1 2 3 ... )"
+  (cond ((< n 0) '())
+        ((= n 0) '(0))
+        (t (append
+                 (generateSequence (- n 1))
+                 (list n)))
+        )
+  )
+
+(defun makeIndexes (i row hashTable)
+  "make hashMap there key is column name and value is its sequence number.
+  like: (col1 -> '(0))
+        (col2 -> '(1)) ..."
+  (cond ((< i 0) hashTable)
+                (t (setf (gethash (aref row i) hashTable) (list i))
+                   (makeIndexes (- i 1) row hashTable)
+                  )
+                )
+  )
+
+(defun makeIndexHashMap (row)
+  "make full hashmap with indexes. like:
+  (col1 -> '(0))
+  ...
+  (* -> '(0 1 2 ...))"
+  (let ((tmpHashTable (make-hash-table :test 'equal)))
+        (setf (gethash "*" tmpHashTable) (generateSequence (- (length row) 1)))
+    (makeIndexes (- (length row) 1) row tmpHashTable)
+        )
   )
 
 (defun createTable (tablename rawData)
   "create table by tablename and rawData - readed file that represented in vector of vectors"
   (make-table :tableName tablename
 			  :columnNames (aref rawData 0)
+			  :columnIndexes (makeIndexHashMap (aref rawData 0))
 			  :data (delete-if (constantly t) rawData :start 0 :count 1)
 			  )
   )
@@ -71,37 +105,5 @@
 											(convertToTable (json:decode-json (open filename)))))
 	(t nil)
 	)
-  )
-
-(defun generateSequence (n)
-  "generate sequence like '(0 1 2 3 ... )"
-  (cond ((< n 0) '())
-        ((= n 0) '(0))
-        (t (append
-                 (generateSequence (- n 1))
-                 (list n)))
-        )
-  )
-
-(defun makeIndexes (i row hashTable)
-  "make hashMap there key is column name and value is its sequence number.
-  like: (col1 -> '(0))
-        (col2 -> '(1)) ..."
-  (cond ((< i 0) hashTable)
-                (t (setf (gethash (aref row i) hashTable) (list i))
-                   (makeIndexes (- i 1) row hashTable)
-                  )
-                )
-  )
-
-(defun makeIndexHashMap (row)
-  "make full hashmap with indexes. like:
-  (col1 -> '(0))
-  ...
-  (* -> '(0 1 2 ...))"
-  (let ((tmpHashTable (make-hash-table :test 'equal)))
-        (setf (gethash "*" tmpHashTable) (generateSequence (- (length row) 1)))
-    (makeIndexes (- (length row) 1) row tmpHashTable)
-        )
   )
 

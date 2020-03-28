@@ -30,6 +30,19 @@
   )
 
 #||
+(pprint (stack-top (make-stack)))
+
+(defun changeStack (stack)
+  (stack-pop stack)
+  (pprint stack)
+  )
+(defvar simple-stack (make-stack))
+(setf simple-stack (stack-push "pasha" simple-stack))
+(setf simple-stack (stack-push "pacha" simple-stack))
+(pprint simple-stack)
+(changeStack simple-stack)
+(pprint simple-stack)
+(exit)
 (defvar simple-stack (make-stack))
 (setf simple-stack (stack-push "pasha" simple-stack))
 (pprint simple-stack)
