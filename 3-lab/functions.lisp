@@ -6,7 +6,6 @@
                             (aref vec index)
                             )
                           vectors)))
-         ;(pprint row)
          (vector-push-extend (apply fn row) column)
          (iterate fn column (+ index 1) cnt vectors)
          ))
@@ -16,30 +15,52 @@
 (defun operator+ (fn1 fn2)
   (let ((col1 (funcall fn1))
 		(col2 (funcall fn2)))
-	(pprint col1)
-	(pprint col2)
-	(iterate #'+ (make-array 0 :fill-pointer 0) 0 (length col1) (list col1 col2))
+	(make-table :columnNames "?column?"
+				:data (iterate #'+
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len col1)
+							   (list (table-data col1) (table-data col2)))
+				)
 	)
   )
 
 (defun operator- (fn1 fn2)
   (let ((col1 (funcall fn1))
 		(col2 (funcall fn2)))
-	(iterate #'- (make-array 0 :fill-pointer 0) 0 (length col1) (list col1 col2))
+	(make-table :columnNames "?column?"
+				:data (iterate #'-
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len col1)
+							   (list (table-data col1) (table-data col2)))
+				)
 	)
   )
 
 (defun operator* (fn1 fn2)
   (let ((col1 (funcall fn1))
 		(col2 (funcall fn2)))
-	(iterate #'* (make-array 0 :fill-pointer 0) 0 (length col1) (list col1 col2))
+	(make-table :columnNames "?column?"
+				:data (iterate #'*
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len col1)
+							   (list (table-data col1) (table-data col2)))
+				)
 	)
   )
 
 (defun operator/ (fn1 fn2)
   (let ((col1 (funcall fn1))
 		(col2 (funcall fn2)))
-	(iterate #'/ (make-array 0 :fill-pointer 0) 0 (length col1) (list col1 col2))
+	(make-table :columnNames "?column?"
+				:data (iterate #'/
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len col1)
+							   (list (table-data col1) (table-data col2)))
+				)
 	)
   )
 
@@ -51,7 +72,12 @@
   (let ((colStr (funcall str))
 		(colFrom (funcall from))
 		(colN (funcall n)))
-	(iterate #'subString (make-array 0 :fill-pointer 0) 0 (length colStr) (list colStr colFrom colN))
+	(make-table :columnNames "?column?"
+				:data (iterate #'subString
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len colStr)
+							   (list (table-data colStr) (table-data colFrom) (table-data colN))))
 	)
   )
 
@@ -62,7 +88,12 @@
 (defun concat (str1 str2)
   (let ((colStr1 (funcall str1))
 		(colStr2 (funcall str2)))
-	(iterate #'concatStr (make-array 0 :fill-pointer 0) 0 (length colStr1) (list colStr1 colStr2))
+	(make-table :columnNames "?column?"
+				:data (iterate #'concatStr
+							   (make-array 0 :fill-pointer 0)
+							   0
+							   (table-len colStr1)
+							   (list (table-data colStr1) (table-data colStr2))))
 	)
   )
 
