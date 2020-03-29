@@ -1,2 +1,2 @@
-# LispFunctionalProgramming
-Lisp Functional Programming
+# SQL-Parser
+SQL-parser implemented in lisp)
