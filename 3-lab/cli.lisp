@@ -3,6 +3,7 @@
 (load "priority-queue/priority-queue.asd")
 (asdf:load-system 'priority-queue)
 ; load all functionality code
+(load "print.lisp")
 (load "testprocessing.lisp")
 (load "importer.lisp")
 (load "where.lisp")
@@ -44,8 +45,27 @@
 (setf (gethash "limit" priorities) 8)
 (setf (gethash "" priorities) 0)
 
+(defun from (tableStr &optional table)
+  ;(pprint "in from")
+  ;(pprint tableStr)
+  (gethash (string-trim " " tableStr) tables)
+  )
+
+(defvar functions (make-hash-table :test 'equal))
+(setf (gethash "from" functions) #'from)
+(setf (gethash "inner join" functions) nil)
+(setf (gethash "left join" functions) nil)
+(setf (gethash "right join" functions) nil)
+(setf (gethash "full outer join" functions) nil)
+(setf (gethash "where" functions) nil)
+(setf (gethash "group by" functions) nil)
+(setf (gethash "having" functions) nil)
+(setf (gethash "order by" functions) nil)
+(setf (gethash "select" functions) #'select)
+(setf (gethash "limit" functions) nil)
+(setf (gethash "" functions) nil)
+
 (defun getPriority (kword priorities)
-  (pprint (gethash kword priorities))
   (gethash kword priorities)
   )
 
@@ -55,30 +75,32 @@
 	)
   )
 
-(defun iterate (index arr str)
+(defun iterateArr (index arr str)
   (cond
 	((= index (length arr)) "")
 	((starts-with str (aref arr index)) (aref arr index))
-	(t (iterate (+ index 1) arr str))
+	(t (iterateArr (+ index 1) arr str))
 	)
   )
 
 (defun getKeyWord (queryStr keyWords)
-  (iterate 0 keyWords queryStr)
+  (iterateArr 0 keyWords queryStr)
   )
 
 (defun make-fn (functionStr parametersStr)
-  (pprint "in make-fn")
-  (pprint (concatenate 'string functionStr "(" parametersStr ")"))
-  (lambda ()
-	(pprint (concatenate 'string functionStr "(" parametersStr ")"))
+  ;(pprint (concatenate 'string functionStr "(" parametersStr ")"))
+  (cond
+	((search "join" functionStr)
+	 (lambda (table)
+	   (funcall (gethash functionStr functions) parametersStr table tables)
+	   ))
+	(t (lambda (table)
+		 (funcall (gethash functionStr functions) parametersStr table)
+		 ))
 	)
   )
 
 (defun parseQuery (queryStr fnStr parameters queue)
-  ;(pprint (concatenate 'string "rest query -> " queryStr))
-  ;(pprint (concatenate 'string "fnStr -> " fnStr))
-  ;(pprint (concatenate 'string "parameters -> " parameters))
   (let ((kword (getKeyWord queryStr keyWords)))
 	(cond
 	  ((string= queryStr "") (pqueue:pqueue-push (make-fn fnStr parameters)
@@ -96,11 +118,10 @@
 	)
   )
 
-(defun print-queue (queue)
+(defun execute-queue (table queue)
   (cond
-	((pqueue:pqueue-empty-p queue) nil)
-	(t (funcall (pqueue:pqueue-pop queue))
-	   (print-queue queue))
+	((pqueue:pqueue-empty-p queue) table)
+	(t (execute-queue (funcall (pqueue:pqueue-pop queue) table) queue))
 	)
   )
 
@@ -109,13 +130,30 @@
 													          :key-type 'integer
 													          :value-type 'function))))
 	(pqueue:pqueue-pop queue)
-	(print-queue queue)
+	;(pprint queue)
+	(printTable (execute-queue #() queue))
 	)
   )
 
 (defun loadTable (tableName)
   "load table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
+  )
+
+(defun parseCommand (commandQuery) 
+  "cut command name" 
+  (let ((openBracketPosition (position #\( commandQuery))) 
+    (setq openBracketPosition (cond 
+                                ((not openBracketPosition) 0) 
+                                (t openBracketPosition) 
+                                )) 
+    (subseq commandQuery 0 openBracketPosition) 
+    ) 
+  )
+
+(defun cutParameter (command)
+  "cut command parameter (text inside '()')"
+  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
   )
 
 (defun execute (commandQuery)
