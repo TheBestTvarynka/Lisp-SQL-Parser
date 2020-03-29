@@ -1,8 +1,11 @@
 
+(require 'asdf)
+(load "priority-queue/priority-queue.asd")
+(asdf:load-system 'priority-queue)
 ; load all functionality code
 (load "print.lisp")
+(load "testprocessing.lisp")
 (load "importer.lisp")
-(load "distinct.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
 (load "select.lisp")
@@ -16,168 +19,141 @@
 (setf (gethash "test" tables) (readTableFromFile "datasource/test.csv"))
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
-(defun getTableName (queryStr)
-  "cut table name from query"
-  (setq queryStr (string-left-trim " " (subseq queryStr (+ (search "from" queryStr) 4))))
-  (let ((spacePosition (position #\SPACE queryStr)))
-	(setq spacePosition (cond
-						  ((not spacePosition) (length queryStr))
-						  (t spacePosition)
-						  ))
-	(subseq queryStr 0 spacePosition)
+; define keywords for sql-query
+(defvar keyWords #("select"
+				   "from"
+				   "right join"
+				   "left join"
+				   "full outer join"
+				   "inner join"
+				   "where"
+				   "order by"
+				   "group by"
+				   "having"
+				   "limit"))
+(defvar priorities (make-hash-table :test 'equal))
+(setf (gethash "from" priorities) 1)
+(setf (gethash "inner join" priorities) 2)
+(setf (gethash "left join" priorities) 2)
+(setf (gethash "right join" priorities) 2)
+(setf (gethash "full outer join" priorities) 2)
+(setf (gethash "where" priorities) 3)
+(setf (gethash "group by" priorities) 4)
+(setf (gethash "having" priorities) 5)
+(setf (gethash "order by" priorities) 6)
+(setf (gethash "select" priorities) 7)
+(setf (gethash "limit" priorities) 8)
+(setf (gethash "" priorities) 0)
+
+(defun from (tableStr &optional table)
+  ;(pprint "in from")
+  ;(pprint tableStr)
+  (gethash (string-trim " " tableStr) tables)
+  )
+
+(defvar functions (make-hash-table :test 'equal))
+(setf (gethash "from" functions) #'from)
+(setf (gethash "inner join" functions) nil)
+(setf (gethash "left join" functions) nil)
+(setf (gethash "right join" functions) nil)
+(setf (gethash "full outer join" functions) nil)
+(setf (gethash "where" functions) #'where)
+(setf (gethash "group by" functions) nil)
+(setf (gethash "having" functions) nil)
+(setf (gethash "order by" functions) nil)
+(setf (gethash "select" functions) #'select)
+(setf (gethash "limit" functions) nil)
+(setf (gethash "" functions) nil)
+
+(defun getPriority (kword priorities)
+  (gethash kword priorities)
+  )
+
+(defun starts-with (str pattern)
+  (let ((p (search pattern str)))
+    (and p (= 0 p))
 	)
   )
 
-(defun getJoinTable (queryStr)
-  (let ((joinPosition (search "join" queryStr)))
-	(cond
-	  ((not joinPosition) "")
-	  (t (getOperator (subseq queryStr (+ joinPosition 4))))
-	  )
-	)
-  )
-
-(defun getJoinType (queryStr)
-  (let ((joinPosition (search "join" queryStr)))
-	(cond
-	  ((not joinPosition) "")
-	  (t (setq queryStr (removeOperator (subseq queryStr (+ (search "from" queryStr) 5))))
-		 (setq joinPosition (search "join" queryStr))
-		 (string-trim " " (subseq queryStr 0 joinPosition)))
-	  )
-	)
-  )
-
-(defun getJoinCondition (queryStr)
-  (subseq queryStr () ())
-  )
-#||
-(pprint (getJoinType "select * from table1 inner join table2 on table1.col1 = table2.col2"))
-(pprint (getJoinType "select * from table1 left join table2 on table1.col1 = table2.col2"))
-(pprint (getJoinType "select * from table1 full outer join table2 on table1.col1 = table2.col2"))
-(exit)
-;||#
-(defun join (queryStr currentTable)
-  ()
-  )
-
-(defun cutWhereClause (queryStr)
-  "cut where clause from queryStr. example:
-  'cond1 and cond2 order by col2 limit 5' -> 'cond1 and cond2'"
-  (let ((curCond (getOperator queryStr)))
-	(setq queryStr (removeOperator queryStr))
-	(setq curCond (concatenate 'string curCond " " (getOperator queryStr)))
-	(setq queryStr (removeOperator queryStr))
-	(setq curCond (concatenate 'string curCond " " (getOperator queryStr)))
-	(setq queryStr (removeOperator queryStr))
-	(cond
-	  ((string= queryStr "") curCond)
-	  ((or (string= (getOperator queryStr) "and") (string= (getOperator queryStr) "or"))
-	   (concatenate 'string
-					curCond
-					" "
-					(getOperator queryStr)
-					" "
-					(cutWhereClause (removeOperator queryStr))
-					)
-	   )
-	  (t curCond)
-	  )
-	)
-  )
-
-(defun getWhere (queryStr)
-  "cut where clause from queryStr. example:
-  'select col1, * from table where cond1 and cond2 order by col2 limit 5' -> 'cond1 and cond2'"
-  (let ((startPosition (search "where" queryStr)))
-	(cond
-	  ((not startPosition) "")
-	  (t (cutWhereClause (subseq queryStr (+ startPosition 5))))
-	  )
-	)
-  )
-
-(defun getOrderBy (queryStr)
-  "return column by which we sort the table"
-  (let ((startPosition (search "order by" queryStr)))
-	(cond
-	  ((not startPosition) "")
-	  (t (getOperator (subseq queryStr (+ startPosition 8))))
-	  )
-	)
-  )
-
-(defun getOrderDirection (queryStr)
-  "return order direction: 'desc' or 'asc' or ''"
-  (let ((startPosition (search "order by" queryStr))
-		(direction ""))
-	(cond
-	  ((not startPosition) "")
-	  (t (setq direction (getOperator (removeOperator (subseq queryStr (+ startPosition 8)))))
-		 (cond
-		   ((or (string= direction "asc") (string= direction "desc")) direction)
-		   (t "")
-		   ))
-	  )
-	)
-  )
-
-(defun ifDistinct (queryStr)
-  "check if query contain distinct keyword"
+(defun iterateArr (index arr str)
   (cond
-	((not (search "distinct" queryStr)) nil)
-	(t t)
+	((= index (length arr)) "")
+	((starts-with str (aref arr index)) (aref arr index))
+	(t (iterateArr (+ index 1) arr str))
 	)
   )
 
-(defun getColumns(queryStr)
-  "cut columns names from query and return tham as list. example:
-  'select col1, col2, * from table' -> '(col1 col2 *)"
-  (let ((startPosition (search "distinct" queryStr)) (endPosition (search "from" queryStr)))
-	(setq startPosition (cond
-						  ((not startPosition) (+ (search "select" queryStr) 6))
-						  (t (+ startPosition 8))
-						  ))
-	(setq queryStr (string-trim " " (subseq queryStr startPosition endPosition)))
-	(map 'list
-	  (lambda (value)(string-trim " " value))
-	  (simple-table:split-string #\, queryStr))
+(defun getKeyWord (queryStr keyWords)
+  (iterateArr 0 keyWords queryStr)
+  )
+
+(defun make-fn (functionStr parametersStr)
+  ;(pprint (concatenate 'string functionStr "(" parametersStr ")"))
+  (cond
+	((search "join" functionStr)
+	 (lambda (table)
+	   (funcall (gethash functionStr functions) parametersStr table tables)
+	   ))
+	(t (lambda (table)
+		 (funcall (gethash functionStr functions) parametersStr table)
+		 ))
+	)
+  )
+
+(defun parseQuery (queryStr fnStr parameters queue)
+  (let ((kword (getKeyWord queryStr keyWords)))
+	(cond
+	  ((string= queryStr "") (pqueue:pqueue-push (make-fn fnStr parameters)
+												 (getPriority fnStr priorities)
+												 queue))
+	  ((string= kword "") (parseQuery (removeOperator queryStr)
+									  fnStr
+									  (concatenate 'string parameters " " (getOperator queryStr))
+									  queue))
+	  (t (setf queue (pqueue:pqueue-push (make-fn fnStr parameters)
+								         (getPriority fnStr priorities)
+								         queue))
+		 (parseQuery (subseq queryStr (length kword)) kword "" queue))
+	  )
+	)
+  )
+
+(defun execute-queue (table queue)
+  (cond
+	((pqueue:pqueue-empty-p queue) table)
+	(t (execute-queue (funcall (pqueue:pqueue-pop queue) table) queue))
 	)
   )
 
 (defun query (queryStr)
-  "this function parse query"
-  (let ((columns (getColumns queryStr))
-		(tableName (getTableName queryStr))
-		(resultTable (make-table))
-		(indexes #()))
-	; take a table
-	(setq resultTable (copy-table (gethash tableName tables)))
-	; join other tables (if required)
-	(setq resultTable (join queryStr resultTable))
-	; take a table indexes
-	(setq indexes (makeIndexHashMap (table-columnNames resultTable)))
-	; where
-	(setq resultTable (where (getWhere queryStr) indexes resultTable))
-	; order by
-	(setq resultTable (orderby (nth 0 (gethash (getOrderBy queryStr) indexes))
-							   (getOrderDirection queryStr) resultTable))
-	; select columns (or execute aggregate functions)
-	(setq resultTable (select columns indexes resultTable))
-	; distinct
-	(setq resultTable (cond
-						((not (ifDistinct queryStr)) resultTable)
-						(t (distinct resultTable)
-						   )
-						))
-	; print table
-	(printTable resultTable)
+  (let ((queue (parseQuery queryStr "" "" (pqueue:make-pqueue #'<
+													          :key-type 'integer
+													          :value-type 'function))))
+	(pqueue:pqueue-pop queue)
+	;(pprint queue)
+	(printTable (execute-queue #() queue))
 	)
   )
 
 (defun loadTable (tableName)
   "load table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
+  )
+
+(defun parseCommand (commandQuery) 
+  "cut command name" 
+  (let ((openBracketPosition (position #\( commandQuery))) 
+    (setq openBracketPosition (cond 
+                                ((not openBracketPosition) 0) 
+                                (t openBracketPosition) 
+                                )) 
+    (subseq commandQuery 0 openBracketPosition) 
+    ) 
+  )
+
+(defun cutParameter (command)
+  "cut command parameter (text inside '()')"
+  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
   )
 
 (defun execute (commandQuery)
