@@ -24,7 +24,7 @@
       )
   )
 
-(defun getFunction (fnStr value)
+(defun getFunctionByName (fnStr value)
   "get function corresponds to the fnStr and value type"
   (cond
 	((string= fnStr "=")
@@ -83,7 +83,7 @@
 		(value (getOperator (removeOperator (removeOperator stringWhere)))))
 	(setq column (nth 0 (gethash column columnIndexes)))
 	(setq value (parse-value value))
-	(setq fn (getFunction fn value))
+	(setq fn (getFunctionByName fn value))
 	(lambda (row)
 	  (funcall fn (aref row column) value)
 	  )

@@ -57,7 +57,7 @@
 (setf (gethash "left join" functions) nil)
 (setf (gethash "right join" functions) nil)
 (setf (gethash "full outer join" functions) nil)
-(setf (gethash "where" functions) nil)
+(setf (gethash "where" functions) #'where)
 (setf (gethash "group by" functions) nil)
 (setf (gethash "having" functions) nil)
 (setf (gethash "order by" functions) nil)
