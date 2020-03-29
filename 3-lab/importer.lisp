@@ -107,3 +107,7 @@
 	)
   )
 
+(defun table-len (table)
+  (length (table-data table))
+  )
+
