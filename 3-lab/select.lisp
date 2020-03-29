@@ -66,7 +66,7 @@
 	)
   )
 
-(defun getPriority (fn)
+(defun getOperatorPriority (fn)
   (cond
 	((string= fn "=") 10)
 	((or (string= fn "*")
@@ -108,7 +108,7 @@
 	  ((stack-is-empty stack)
 	   (stack-push operator stack)
 	   operators)
-	  ((>= (getPriority topOperator) (getPriority operator))
+	  ((>= (getOperatorPriority topOperator) (getOperatorPriority operator))
 	   (insertOperator operator (appendValue operators topOperator) (stack-pop stack)))
 	  (t (stack-push operator stack)
 		 operators)
