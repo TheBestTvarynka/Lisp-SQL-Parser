@@ -19,7 +19,7 @@
 				:data (iterate #'+
 							   (make-array 0 :fill-pointer 0)
 							   0
-							   (table-len col1)
+							   (min (table-len col1) (table-len col2))
 							   (list (table-data col1) (table-data col2)))
 				)
 	)
@@ -32,7 +32,7 @@
 				:data (iterate #'-
 							   (make-array 0 :fill-pointer 0)
 							   0
-							   (table-len col1)
+							   (min (table-len col1) (table-len col2))
 							   (list (table-data col1) (table-data col2)))
 				)
 	)
@@ -45,7 +45,7 @@
 				:data (iterate #'*
 							   (make-array 0 :fill-pointer 0)
 							   0
-							   (table-len col1)
+							   (min (table-len col1) (table-len col2))
 							   (list (table-data col1) (table-data col2)))
 				)
 	)
@@ -58,7 +58,7 @@
 				:data (iterate #'/
 							   (make-array 0 :fill-pointer 0)
 							   0
-							   (table-len col1)
+							   (min (table-len col1) (table-len col2))
 							   (list (table-data col1) (table-data col2)))
 				)
 	)
