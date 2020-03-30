@@ -61,3 +61,10 @@
   resultTable
   )
 
+(defun getDistinctFn ()
+  "returns lambda that can execute distinct function"
+  (lambda (resultTable)
+	(distinct resultTable)
+	)
+  )
+

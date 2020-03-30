@@ -69,12 +69,6 @@
   (gethash kword priorities)
   )
 
-(defun starts-with (str pattern)
-  (let ((p (search pattern str)))
-    (and p (= 0 p))
-	)
-  )
-
 (defun iterateArr (index arr str)
   (cond
 	((= index (length arr)) "")

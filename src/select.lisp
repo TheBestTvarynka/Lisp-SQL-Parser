@@ -1,12 +1,9 @@
-(require 'asdf)
-(load "cl-simple-table-master/cl-simple-table.asd")
-(asdf:load-system 'cl-simple-table)
-; maybe instead of functions from this package I will write my own function
 
 (load "distinct.lisp")
 (load "stack/stack.lisp")
 (load "functions.lisp")
 (load "importer.lisp")
+(load "testprocessing.lisp")
 
 (defun generateColumn (len val)
   (make-array len :initial-element val)
@@ -236,26 +233,30 @@
   )
 
 (defun select (selectStr table)
-  ;(pprint "in select")
-  ;(pprint selectStr)
   (setf selectStr (string-left-trim " " selectStr))
+  (let ((distinctFn (cond
+					  ((starts-with selectStr "distinct")
+					   (setf selectStr (removeOperator selectStr))
+					   (getDistinctFn))
+					  (t (lambda (table)table))
+					  )))
   (let ((fns (buildFunctions '() (parseSelect selectStr '() (make-stack) table))))
 	(let ((columns (mapcar (lambda (colFn)(funcall colFn)) fns)))
-	  (make-table :tableName (table-tableName table)
-				  :columnNames (make-array (length columns)
-										   :initial-contents (mapcar (lambda (col)
-																	   (table-columnNames col)
-																	   )
-																	 columns))
-				  :data (iterate (lambda (&rest row)
-								   (make-array (length row) :initial-contents row)
-								   )
-								 (make-array 0 :fill-pointer 0)
-			    				 0
-			   					 (table-len (nth 0 columns))
-			   					 (mapcar (lambda (col)(table-data col)) columns)))
+	  (funcall distinctFn
+           	   (make-table :tableName (table-tableName table)
+           				   :columnNames (make-array (length columns) :initial-contents (mapcar (lambda (col)
+           											 						                     (table-columnNames col)
+           																	                     )
+           																	                   columns))
+           				   :data (iterate (lambda (&rest row)
+           								    (make-array (length row) :initial-contents row)
+           								    )
+           								  (make-array 0 :fill-pointer 0)
+           			    				  0
+           			   					  (table-len (nth 0 columns))
+           			   					  (mapcar (lambda (col)(table-data col)) columns))))
 	  )
-	)
+	))
   )
 
 ;(defvar simple (make-table :tableName "test"

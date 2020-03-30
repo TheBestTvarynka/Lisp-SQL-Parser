@@ -16,3 +16,10 @@
       (subseq stringWhere 0 spasePosition)
       )
   )
+
+(defun starts-with (str pattern)
+  (let ((p (search pattern str)))
+    (and p (= 0 p))
+        )
+  )
+
