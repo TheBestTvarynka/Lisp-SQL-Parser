@@ -4,6 +4,7 @@
 (load "functions.lisp")
 (load "importer.lisp")
 (load "testprocessing.lisp")
+(load "aggregatefunctions.lisp")
 
 (defun generateColumn (len val)
   (make-array len :initial-element val)

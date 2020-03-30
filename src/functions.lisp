@@ -105,6 +105,10 @@
 	((string= fnname "/") #'operator/)
 	((string= fnname "substr") #'substr)
 	((string= fnname "concat") #'concat)
+	; add aggregate functions
+	((string= fnname "count") #'countRows)
+	((string= fnname "max") #'maxRows)
+	((string= fnname "avg") #'findAverage)
 	(t nil)
 	)
   )
@@ -117,6 +121,10 @@
 	((string= fnname "/") 2)
 	((string= fnname "substr") 3)
 	((string= fnname "concat") 2)
+	; add aggregate functions
+	((string= fnname "count") 1)
+	((string= fnname "max") 1)
+	((string= fnname "avg") 1)
 	(t nil)
 	)
   )

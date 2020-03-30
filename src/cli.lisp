@@ -4,7 +4,6 @@
 (asdf:load-system 'priority-queue)
 ; load all functionality code
 (load "print.lisp")
-(load "testprocessing.lisp")
 (load "importer.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
