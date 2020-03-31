@@ -3,8 +3,8 @@
 (load "priority-queue/priority-queue.asd")
 (asdf:load-system 'priority-queue)
 ; load all functionality code
-(load "print.lisp")
 (load "importer.lisp")
+(load "print.lisp")
 (load "where.lisp")
 (load "orderby.lisp")
 (load "select.lisp")
@@ -59,7 +59,7 @@
 (setf (gethash "where" functions) #'where)
 (setf (gethash "group by" functions) nil)
 (setf (gethash "having" functions) nil)
-(setf (gethash "order by" functions) nil)
+(setf (gethash "order by" functions) #'orderBy)
 (setf (gethash "select" functions) #'select)
 (setf (gethash "limit" functions) nil)
 (setf (gethash "" functions) nil)

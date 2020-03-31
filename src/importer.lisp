@@ -111,3 +111,7 @@
   (length (table-data table))
   )
 
+(defun table-value (row col table)
+  (aref (aref (table-data table) row) col)
+  )
+

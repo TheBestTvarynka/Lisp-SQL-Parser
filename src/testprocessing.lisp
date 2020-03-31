@@ -23,3 +23,20 @@
         )
   )
 
+(defun appendToList (lst value)
+  (append lst (list value))
+  )
+
+(defun split (words str separator)
+  (let ((sepPos (position separator str)))
+    (cond
+	  ((not sepPos) (appendToList words str))
+	  (t (split (appendToList words (subseq str 0 sepPos)) (subseq str (+ sepPos 1)) separator))
+	  )
+    )
+  )
+
+(defun split-str (str separator)
+  (split '() str separator)
+  )
+
