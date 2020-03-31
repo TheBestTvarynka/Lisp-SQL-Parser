@@ -1,4 +1,4 @@
-(load "testprocessing.lisp")
+(load "textprocessing.lisp")
 
 (defun generateConditionAND (fn1 fn2)
   "returns function that check if fn1 statement AND fn2 statement are true"

@@ -1,6 +1,6 @@
 
 (load "importer.lisp")
-(load "testprocessing.lisp")
+(load "textprocessing.lisp")
 
 (defun getComparator (value)
   "returns function for comparing in asc order corresponds to value type"

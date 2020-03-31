@@ -3,7 +3,7 @@
 (load "stack/stack.lisp")
 (load "functions.lisp")
 (load "importer.lisp")
-(load "testprocessing.lisp")
+(load "textprocessing.lisp")
 (load "aggregatefunctions.lisp")
 
 (defun generateColumn (len val)
