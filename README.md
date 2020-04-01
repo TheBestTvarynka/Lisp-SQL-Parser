@@ -7,10 +7,10 @@ Table structure contain a few parameters:
 * columnIndexes - hash map where key is columns name and value is column index in the table
 * data - all table data. holds as vector of vectors
 
-SLP-parser supports next functioality:
+SQL-parser supports next functioality:
 * expressions on select. like: `select 1 + id ...`. All supported operators: `+,-,*,/,(,)`. Also can use another functions:
-..* substr (str, from, number_of_char)
-..* concat (str1, str2)
+    - substr (str, from, number_of_char)
+    - concat (str1, str2)
 * aggregate functions: count(), avg(), max()
 * ~~case~~ in progress...
 * from
@@ -22,19 +22,19 @@ SLP-parser supports next functioality:
 
 ## Examples
 SQL-parser can execute next queries:
-query(select distinct title, id_mp, id_fr from map_zal-skl9)
-query(select distinct * from test where col > 15 and col < 23)
-query(select row + 2, col, pos_x, pos_y from test)
-query(select max(col) * count(row) from test)
-query(select 2*(col+pos_x), substr(title, 1, 3) from test)
-query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
+`query(select distinct title, id_mp, id_fr from map_zal-skl9)`
+`query(select distinct * from test where col > 15 and col < 23)`
+`query(select row + 2, col, pos_x, pos_y from test)`
+`query(select max(col) * count(row) from test)`
+`query(select 2*(col+pos_x), substr(title, 1, 3) from test)`
+`query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)`
 
 ## Meta
 
 Pavlo Myroniyk – @TheBestTvarynka, [pspos.developqkation@gmail.com](mailto:pspos.developqkation@gmail.com)
 
 ## Other links
-Additional lisp packages thau I use in this project:
+Additional lisp packages that I use in this project:
 * [json parser](https://github.com/hankhero/cl-json)
 * [priority queue](https://github.com/dsorokin/priority-queue)
 
