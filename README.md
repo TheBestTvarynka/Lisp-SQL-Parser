@@ -1,6 +1,6 @@
 ## SQL-parser implemented in lisp.
 
-All data reads from `csv` or `.tsv` or `.json` file and holds in table structure.
+All data reads from `.csv` or `.tsv` or `.json` file and holds in table structure.
 Table structure contain a few parameters:
 * tableName - no comments
 * columnNames - vector with column names (like `#("col1" "col2" …)`)
@@ -22,16 +22,23 @@ SQL-parser supports next functioality:
 
 ## Examples
 SQL-parser can execute next queries:
-`query(select distinct title, id_mp, id_fr from map_zal-skl9)`
-`query(select distinct * from test where col > 15 and col < 23)`
-`query(select row + 2, col, pos_x, pos_y from test)`
-`query(select max(col) * count(row) from test)`
-`query(select 2*(col+pos_x), substr(title, 1, 3) from test)`
-`query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)`
+```
+   query(select distinct title, id_mp, id_fr from map_zal-skl9)
+   query(select distinct * from test where col > 15 and col < 23)
+   query(select row + 2, col, pos_x, pos_y from test)
+   query(select max(col) * count(row) from test)
+   query(select 2*(col+pos_x), substr(title, 1, 3) from test)
+   query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
+```
 
 ## Meta
 
 Pavlo Myroniyk – @TheBestTvarynka, [pspos.developqkation@gmail.com](mailto:pspos.developqkation@gmail.com)
+
+If you want to
+* improve this project then make a pull request or write to me on email;
+* report about a bug or other mistake then make an issue;
+* tell me something else then write to me on email;
 
 ## Other links
 Additional lisp packages that I use in this project:
