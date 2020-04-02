@@ -20,15 +20,24 @@ SQL-parser supports next functioality:
 * ~~group by~~ in progress...
 * ~~having~~ in progress...
 
+## How to run SQL-parser
+For running this parser I use SBCL 2.0.1.
+Type in your terminal:
+```
+git clone https://github.com/TheBestTvarynka/LispFunctionalProgramming.git
+cd LispFunctionalProgramming/src
+sbcl --script cli.lisp
+```
+
 ## Examples
 SQL-parser can execute next queries:
 ```
-   query(select distinct title, id_mp, id_fr from map_zal-skl9)
-   query(select distinct * from test where col > 15 and col < 23)
-   query(select row + 2, col, pos_x, pos_y from test)
-   query(select max(col) * count(row) from test)
-   query(select 2*(col+pos_x), substr(title, 1, 3) from test)
-   query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
+query(select distinct title, id_mp, id_fr from map_zal-skl9)
+query(select distinct * from test where col > 15 and col < 23)
+query(select row + 2, col, pos_x, pos_y from test)
+query(select max(col) * count(row) from test)
+query(select 2*(col+pos_x), substr(title, 1, 3) from test)
+query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
 ```
 
 ## Meta

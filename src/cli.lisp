@@ -114,7 +114,7 @@
 (defun execute-queue (table queue)
   (cond
 	((pqueue:pqueue-empty-p queue) table)
-	(t (execute-queue (funcall (pqueue:pqueue-pop queue) table) queue))
+	(t (execute-queue (funcall (pqueue:pqueue-pop queue) (copy-table table)) queue))
 	)
   )
 
@@ -124,7 +124,7 @@
 													          :value-type 'function))))
 	(pqueue:pqueue-pop queue)
 	;(pprint queue)
-	(printTable (execute-queue #() queue))
+	(printTable (execute-queue (make-table) queue))
 	)
   )
 
