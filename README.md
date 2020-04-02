@@ -8,7 +8,7 @@ Table structure contain a few parameters:
 * data - all table data. holds as vector of vectors
 
 SQL-parser supports next functioality:
-* expressions on select. like: `select 1 + id ...`. All supported operators: `+,-,*,/,(,)`. Also can use another functions:
+* expressions on select. like: `select 1 + id ...`. All supported operators: `+,-,*,/,(,)`. Also can use another sql functions:
     - substr (str, from, number_of_char)
     - concat (str1, str2)
 * aggregate functions: count(), avg(), max()
