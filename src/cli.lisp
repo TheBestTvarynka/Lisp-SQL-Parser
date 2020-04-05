@@ -8,6 +8,7 @@
 (load "where.lisp")
 (load "orderby.lisp")
 (load "select.lisp")
+(load "joins.lisp")
 
 ; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
@@ -16,6 +17,7 @@
 (setf (gethash "mp-posts_full" tables) (readTableFromFile "datasource/mp-posts_full.csv"))
 (setf (gethash "mps-declarations_rada" tables) (readTableFromFile "datasource/mps-declarations_rada.json"))
 (setf (gethash "test" tables) (readTableFromFile "datasource/test.csv"))
+(setf (gethash "test2" tables) (readTableFromFile "datasource/test2.csv"))
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
 ; define keywords for sql-query
@@ -53,8 +55,8 @@
 (defvar functions (make-hash-table :test 'equal))
 (setf (gethash "from" functions) #'from)
 (setf (gethash "inner join" functions) nil)
-(setf (gethash "left join" functions) nil)
-(setf (gethash "right join" functions) nil)
+(setf (gethash "left join" functions) #'join)
+(setf (gethash "right join" functions) #'join)
 (setf (gethash "full outer join" functions) nil)
 (setf (gethash "where" functions) #'where)
 (setf (gethash "group by" functions) nil)
@@ -85,7 +87,7 @@
   (cond
 	((search "join" functionStr)
 	 (lambda (table)
-	   (funcall (gethash functionStr functions) parametersStr table tables)
+	   (funcall (gethash functionStr functions) (concatenate 'string functionStr parametersStr) table tables)
 	   ))
 	(t (lambda (table)
 		 (funcall (gethash functionStr functions) parametersStr table)
