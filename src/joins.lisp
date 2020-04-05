@@ -33,42 +33,56 @@
   )
 
 (defun findRow (value index data)
-  (let ((row (find-if (lambda (row)
-						(cond ((funcall (getEqual value) value (aref row index)) row)(t nil))
-						)
-					  data)))
-	(cond
-	  ((not row) (make-array (length (aref data 0)) :initial-element nil))
-	  (t row)
-	  )
-	)
+  (find-if (lambda (row)
+			 (cond ((funcall (getEqual value) value (aref row index)) row)(t nil))
+			)
+		   data)
+  )
+
+(defun makeEmptyRow (size)
+  (make-array size :initial-element nil)
   )
 
 (defun concatenateRowsByIndex (index1 data1 index2 data2)
   (concatenate 'vector data1 (subseq data2 0 index2) (subseq data2 (+ index2 1)))
   )
 
+(defun innerJoin (rowIndex col1 data1 col2 data2)
+  (reduce (lambda (resData curRow)
+			(let ((newRow (findRow (aref curRow col1) col2 data2)))
+			  (cond
+				((not newRow) resData)
+				(t (vector-push-extend (concatenateRowsByIndex col1 curRow col2 newRow) resData)
+				   resData)
+				)
+			  )
+			)
+		  data1
+		  :initial-value (make-array 0 :fill-pointer 0))
+  )
+
 (defun sideJoin (rowIndex col1 data1 col2 data2)
-  (cond
-	((= rowIndex (length data1)) data1)
-	(t (let ((curRow (aref data1 rowIndex)))
-		 (setf (aref data1 rowIndex) (concatenateRowsByIndex col1
-															 curRow
-															 col2
-															 (findRow (aref curRow col1) col2 data2)))
-	     (sideJoin (+ rowIndex 1) col1 data1 col2 data2)
-		 )
-	   )
-	)
+  (reduce (lambda (resData curRow)
+			(let ((newRow (findRow (aref curRow col1) col2 data2)))
+			  (cond
+				((not newRow)
+				 (vector-push-extend (concatenateRowsByIndex col1 curRow col2 (makeEmptyRow (length (aref data2 0)))) resData)
+				 resData)
+				(t
+				  (vector-push-extend (concatenateRowsByIndex col1 curRow col2 newRow) resData)
+				  resData)
+				)
+			  )
+			)
+		  data1
+		  :initial-value (make-array 0 :fill-pointer 0))
   )
 
 (defun joinData (joinType col1 data1 col2 data2 table)
-  ;(pprint (list col1 col2))
-  ;(pprint data1)
-  ;(pprint data2)
   (setf (table-data table) (cond
 							 ((string= joinType "left") (sideJoin 0 col1 data1 col2 data2))
 							 ((string= joinType "right") (sideJoin 0 col2 data2 col1 data1))
+							 ((string= joinType "inner") (innerJoin 0 col1 data1 col2 data2))
 							 (t nil)))
   table
   )
@@ -88,7 +102,7 @@
 																                 col2
 																                 (table-columnNames table2))))))
 	  ;(pprint resTable)
-	  (terpri)
+	  ;(terpri)
 	  (joinData joinType col1 (table-data table1) col2 (table-data table2) (copy-table resTable))
 	  )
 	)
@@ -112,7 +126,7 @@
   )
 
 (defun join (joinStr table tables)
-  (pprint joinStr)
+  ;(pprint joinStr)
   (setf joinStr (string-trim " " joinStr))
   (let ((additionalTable (copy-table (gethash (getJoinTableName joinStr) tables))))
 	(joinTables (getJoinType joinStr)

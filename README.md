@@ -41,6 +41,7 @@ query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
 query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.title from test2 left join test on test.id = test2.id)
 query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.title from test2 left join test on test.id = test2.id order by test2.price)
 query(select test2.id, test2.price, test2.owner, test.row, test.title from test2 left join test on test.id = test2.id where test2.id < 5 order by test2.price desc)
+query(select test2.id, test2.price, test2.owner, test.row, test.col, test.pos_x, test.title from test2 inner join test on test.id = test2.id)
 ```
 
 ## Meta

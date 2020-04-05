@@ -54,7 +54,7 @@
 
 (defvar functions (make-hash-table :test 'equal))
 (setf (gethash "from" functions) #'from)
-(setf (gethash "inner join" functions) nil)
+(setf (gethash "inner join" functions) #'join)
 (setf (gethash "left join" functions) #'join)
 (setf (gethash "right join" functions) #'join)
 (setf (gethash "full outer join" functions) nil)
