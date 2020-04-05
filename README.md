@@ -14,9 +14,9 @@ SQL-parser supports next functioality:
 * aggregate functions: count(), avg(), max()
 * ~~case~~ in progress...
 * from
-* joins (~~inner~~, left, right, ~~full outer~~).
-* order by. can on multiply columns, like: `order by col1, col2 desc`
-* where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` in conditions.
+* joins (inner, left, right, ~~full outer~~).
+* order by. can use with multiply columns, like: `order by col1, col2 desc`
+* where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` inside a condition.
 * ~~group by~~ in progress...
 * ~~having~~ in progress...
 
