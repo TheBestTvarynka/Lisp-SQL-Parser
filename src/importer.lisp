@@ -115,3 +115,6 @@
   (aref (aref (table-data table) row) col)
   )
 
+(defun table-column-number (table)
+  (length (table-columnNames table))
+  )

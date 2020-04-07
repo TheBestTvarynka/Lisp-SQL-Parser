@@ -1,8 +1,7 @@
 
 (load "importer.lisp")
 (load "textprocessing.lisp")
-; delete it later
-(load "print.lisp")
+(load "orderby.lisp")
 
 (defun getEqual (value)
   "returns function for checking if two values is equal"
@@ -43,8 +42,18 @@
   (make-array size :initial-element nil)
   )
 
-(defun concatenateRowsByIndex (index1 data1 index2 data2)
-  (concatenate 'vector data1 (subseq data2 0 index2) (subseq data2 (+ index2 1)))
+(defun concatenateRows (data1 data2)
+  (concatenate 'vector data1 data2)
+  )
+
+(defun addEndRow (resData row size)
+  (vector-push-extend (concatenateRows (makeEmptyRow (- size (length row))) row) resData)
+  resData
+  )
+
+(defun addBeginRow (resData row size)
+  (vector-push-extend (concatenateRows row (makeEmptyRow (- size (length row)))) resData)
+  resData
   )
 
 (defun innerJoin (rowIndex col1 data1 col2 data2)
@@ -52,7 +61,7 @@
 			(let ((newRow (findRow (aref curRow col1) col2 data2)))
 			  (cond
 				((not newRow) resData)
-				(t (vector-push-extend (concatenateRowsByIndex col1 curRow col2 newRow) resData)
+				(t (vector-push-extend (concatenateRows curRow newRow) resData)
 				   resData)
 				)
 			  )
@@ -61,29 +70,55 @@
 		  :initial-value (make-array 0 :fill-pointer 0))
   )
 
-(defun sideJoin (rowIndex col1 data1 col2 data2)
-  (reduce (lambda (resData curRow)
-			(let ((newRow (findRow (aref curRow col1) col2 data2)))
-			  (cond
-				((not newRow)
-				 (vector-push-extend (concatenateRowsByIndex col1 curRow col2 (makeEmptyRow (length (aref data2 0)))) resData)
-				 resData)
-				(t
-				  (vector-push-extend (concatenateRowsByIndex col1 curRow col2 newRow) resData)
-				  resData)
-				)
-			  )
-			)
-		  data1
-		  :initial-value (make-array 0 :fill-pointer 0))
+(defun addNilRows (restData resData size)
+  (reduce (lambda (res row)(addBeginRow resData row size))
+		  restData
+		  :initial-value resData)
   )
 
-(defun joinData (joinType col1 data1 col2 data2 table)
+(defun deleteFirstValues (value index data)
+  (cond
+	((= (aref (aref data 0) index) value) (deleteFirstValues value index (subseq data 1)))
+	(t data)
+	)
+  )
+
+(defun joinRowsByValue (col1 row col2 data2 resData)
+  (pprint (list "IN joinRowsByValue: " col1 col2))
+  (cond
+	((= (length data2) 0) resData)
+	((= (aref row col1) (aref (aref data2 0) col2))
+	 (vector-push-extend (concatenateRows row (aref data2 0)) resData)
+	 ;(joinRowsByValue (aref row col1) row col2 (subseq data2 1) resData))
+	 (joinRowsByValue col1 row col2 (subseq data2 1) resData))
+	(t resData)
+	)
+  )
+
+(defun sideJoin (col1 data1 col2 data2 resData size)
+  (pprint (list col1 col2))
+  (cond
+	((= (length data1) 0) resData)
+	((= (length data2) 0) (addNilRows data1 resData size))
+	(t (let ((elem1 (aref (aref data1 0) col1))
+			 (elem2 (aref (aref data2 0) col2)))
+		 (cond
+		   ((> elem1 elem2) (sideJoin col1 data1 col2 (deleteFirstValues elem2 col2 data2) resData size))
+		   ((< elem1 elem2) (sideJoin col1 (subseq data1 1) col2 data2 (addBeginRow resData (aref data1 0) size) size))
+		   (t (sideJoin col1 (subseq data1 1) col2 data2 (joinRowsByValue col1 (aref data1 0) col2 data2 resData) size))
+		   )
+		 ))
+	)
+  )
+
+(defun joinData (joinType col1 data1 col2 data2 table size)
   (setf (table-data table) (cond
-							 ((string= joinType "left") (sideJoin 0 col1 data1 col2 data2))
-							 ((string= joinType "right") (sideJoin 0 col2 data2 col1 data1))
+							 ((string= joinType "left") (sideJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0) size))
+							 ((string= joinType "right") (sideJoin col2 data2 col1 data1 (make-array 0 :fill-pointer 0) size))
 							 ((string= joinType "inner") (innerJoin 0 col1 data1 col2 data2))
-							 (t nil)))
+							 ((string= joinType "full outer") nil)
+							 (t nil)
+							 ))
   table
   )
 
@@ -97,13 +132,14 @@
 		(col2 (nth 0 (gethash (nth 1 params) (table-columnIndexes table2)))))
 	;(pprint (list col1 col2))
 	(let ((resTable (addIndexes (make-table :tableName ""
-							                :columnNames (concatenateRowsByIndex col1
-																                 (table-columnNames table1)
-																                 col2
+							                :columnNames (concatenateRows (table-columnNames table1)
 																                 (table-columnNames table2))))))
-	  ;(pprint resTable)
-	  ;(terpri)
-	  (joinData joinType col1 (table-data table1) col2 (table-data table2) (copy-table resTable))
+	  (joinData joinType
+				col1
+				(table-data (orderBy (nth 0 params) table1))
+				col2 (table-data (orderBy (nth 1 params) table2))
+				(copy-table resTable)
+				(+ (table-column-number table1) (table-column-number table2)))
 	  )
 	)
   )
