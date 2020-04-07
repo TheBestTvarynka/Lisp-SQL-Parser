@@ -56,20 +56,6 @@
   resData
   )
 
-(defun innerJoin (rowIndex col1 data1 col2 data2)
-  (reduce (lambda (resData curRow)
-			(let ((newRow (findRow (aref curRow col1) col2 data2)))
-			  (cond
-				((not newRow) resData)
-				(t (vector-push-extend (concatenateRows curRow newRow) resData)
-				   resData)
-				)
-			  )
-			)
-		  data1
-		  :initial-value (make-array 0 :fill-pointer 0))
-  )
-
 (defun addNilRows (restData resData size)
   (reduce (lambda (res row)(addBeginRow resData row size))
 		  restData
@@ -84,7 +70,6 @@
   )
 
 (defun joinRowsByValue (col1 row col2 data2 resData)
-  (pprint (list "IN joinRowsByValue: " col1 col2))
   (cond
 	((= (length data2) 0) resData)
 	((= (aref row col1) (aref (aref data2 0) col2))
@@ -95,8 +80,22 @@
 	)
   )
 
+(defun innerJoin (col1 data1 col2 data2 resData)
+  (cond
+	((= (length data1) 0) resData)
+	((= (length data2) 0) resData)
+	(t (let ((elem1 (aref (aref data1 0) col1))
+			 (elem2 (aref (aref data2 0) col2)))
+		 (cond
+		   ((> elem1 elem2) (innerJoin col1 data1 col2 (deleteFirstValues elem2 col2 data2) resData))
+		   ((< elem1 elem2) (innerJoin col1 (deleteFirstValues elem1 col1 data1) col2 data2 resData))
+		   (t (innerJoin col1 (subseq data1 1) col2 data2 (joinRowsByValue col1 (aref data1 0) col2 data2 resData)))
+		   )
+		 ))
+	)
+  )
+
 (defun sideJoin (col1 data1 col2 data2 resData size)
-  (pprint (list col1 col2))
   (cond
 	((= (length data1) 0) resData)
 	((= (length data2) 0) (addNilRows data1 resData size))
@@ -115,7 +114,7 @@
   (setf (table-data table) (cond
 							 ((string= joinType "left") (sideJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0) size))
 							 ((string= joinType "right") (sideJoin col2 data2 col1 data1 (make-array 0 :fill-pointer 0) size))
-							 ((string= joinType "inner") (innerJoin 0 col1 data1 col2 data2))
+							 ((string= joinType "inner") (innerJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0)))
 							 ((string= joinType "full outer") nil)
 							 (t nil)
 							 ))
