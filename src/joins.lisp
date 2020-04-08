@@ -64,6 +64,7 @@
 
 (defun deleteFirstValues (value index data)
   (cond
+	((= (length data) 0) data)
 	((= (aref (aref data 0) index) value) (deleteFirstValues value index (subseq data 1)))
 	(t data)
 	)
@@ -74,8 +75,16 @@
 	((= (length data2) 0) resData)
 	((= (aref row col1) (aref (aref data2 0) col2))
 	 (vector-push-extend (concatenateRows row (aref data2 0)) resData)
-	 ;(joinRowsByValue (aref row col1) row col2 (subseq data2 1) resData))
 	 (joinRowsByValue col1 row col2 (subseq data2 1) resData))
+	(t resData)
+	)
+  )
+
+(defun joinFistValues (value col1 data1 col2 data2 resData)
+  (cond
+	((= (length data1) 0) resData)
+	((= value (aref (aref data1 0) col1))
+	 (joinFistValues value col1 (subseq data1 1) col2 data2 (joinRowsByValue col1 (aref data1 0) col2 data2 resData)))
 	(t resData)
 	)
   )
@@ -110,12 +119,27 @@
 	)
   )
 
+(defun fullOuterJoin (col1 data1 col2 data2 resData size)
+  (cond
+	((= (length data1) 0) (addNilRows data2 resData size))
+	((= (length data2) 0) (addNilRows data1 resData size))
+	(t (let ((elem1 (aref (aref data1 0) col1))
+			 (elem2 (aref (aref data2 0) col2)))
+		 (cond
+		   ((> elem1 elem2) (fullOuterJoin col1 data1 col2 (subseq data2 1) (addEndRow resData (aref data2 0) size) size))
+		   ((< elem1 elem2) (fullOuterJoin col1 (subseq data1 1) col2 data2 (addBeginRow resData (aref data1 0) size) size))
+		   (t (fullOuterJoin col1 (deleteFirstValues elem1 col1 data1) col2 (deleteFirstValues elem2 col2 data2) (joinFistValues elem1 col1 data1 col2 data2 resData) size))
+		   )
+		 ))
+	)
+  )
+
 (defun joinData (joinType col1 data1 col2 data2 table size)
   (setf (table-data table) (cond
 							 ((string= joinType "left") (sideJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0) size))
 							 ((string= joinType "right") (sideJoin col2 data2 col1 data1 (make-array 0 :fill-pointer 0) size))
 							 ((string= joinType "inner") (innerJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0)))
-							 ((string= joinType "full outer") nil)
+							 ((string= joinType "full outer") (fullOuterJoin col1 data1 col2 data2 (make-array 0 :fill-pointer 0) size))
 							 (t nil)
 							 ))
   table
