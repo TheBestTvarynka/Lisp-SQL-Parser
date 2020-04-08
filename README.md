@@ -14,7 +14,7 @@ SQL-parser supports next functioality:
 * aggregate functions: count(), avg(), max()
 * ~~case~~ in progress...
 * from
-* joins (inner, left, right, ~~full outer~~).
+* joins (inner, left, right, full outer).
 * order by. can use with multiply columns, like: `order by col1, col2 desc`
 * where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` inside a condition.
 * ~~group by~~ in progress...
@@ -31,7 +31,7 @@ sbcl --script cli.lisp
 
 ## Examples
 SQL-parser can execute next queries:
-```
+```sql
 query(select distinct title, id_mp, id_fr from map_zal-skl9)
 query(select distinct * from test where col > 15 and col < 23)
 query(select row + 2, col, pos_x, pos_y from test)
@@ -42,6 +42,7 @@ query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.titl
 query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.title from test2 left join test on test.id = test2.id order by test2.price)
 query(select test2.id, test2.price, test2.owner, test.row, test.title from test2 left join test on test.id = test2.id where test2.id < 5 order by test2.price desc)
 query(select test2.id, test2.price, test2.owner, test.row, test.col, test.pos_x, test.title from test2 inner join test on test.id = test2.id)
+query(select test.id, test.row, test.col, test.title, test2.id, test2.price, test2.owner from test full outer join test2 on test.id = test2.id)
 ```
 
 ## Meta
