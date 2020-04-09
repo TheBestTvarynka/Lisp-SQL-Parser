@@ -3,6 +3,8 @@
 (load "priority-queue/priority-queue.asd")
 (asdf:load-system 'priority-queue)
 ; load all functionality code
+(load "getenv.lisp")
+
 (load "importer.lisp")
 (load "print.lisp")
 (load "where.lisp")
@@ -181,7 +183,7 @@
 	  ((string= command "exit") (exit))
 	  ((string= command "query") (query (cutParameter commandQuery)))
 	  ((string= command "load") (loadTable (cutParameter commandQuery)))
-	  (t (pprint "Error: entered command not fund!!!"))
+	  (t (princ "Error: entered command not fund!!!"))
 	  )
 	)
   )
@@ -189,7 +191,7 @@
 (defun run ()
   "run cli"
   (terpri)
-  (princ "[user@host ~]$: ")
+  (princ (format nil "[~A@~A]$: " (getEnvVariable "USER") (getEnvVariable "PWD")))
   (terpri)
   (execute (read-line))
   (run)

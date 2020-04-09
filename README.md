@@ -49,6 +49,7 @@ query(select test2.id, test2.price, test2.owner, test.row, test.col, test.pos_x,
 query(select test.id, test.row, test.col, test.title, test2.id, test2.price, test2.owner from test full outer join test2 on test.id = test2.id)
 query(select id, price, owner from test2 union select id, price, owner from test3)
 query(select id, price, owner from test2 union select id, price, owner from test3 union select id, price, owner from test4)
+query(select 1 union select 2 union select 3 union select 4)
 ```
 
 ## Meta
