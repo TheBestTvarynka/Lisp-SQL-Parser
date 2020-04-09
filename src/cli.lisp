@@ -9,6 +9,7 @@
 (load "orderby.lisp")
 (load "select.lisp")
 (load "joins.lisp")
+(load "union.lisp")
 
 ; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
@@ -18,6 +19,8 @@
 (setf (gethash "mps-declarations_rada" tables) (readTableFromFile "datasource/mps-declarations_rada.json"))
 (setf (gethash "test" tables) (readTableFromFile "datasource/test.csv"))
 (setf (gethash "test2" tables) (readTableFromFile "datasource/test2.csv"))
+(setf (gethash "test3" tables) (readTableFromFile "datasource/test3.csv"))
+(setf (gethash "test4" tables) (readTableFromFile "datasource/test4.csv"))
 ;(setf (gethash "plenary_register_mps-skl9" tables) mps_declarations_rada)
 
 ; define keywords for sql-query
@@ -120,13 +123,33 @@
 	)
   )
 
-(defun query (queryStr)
+(defun makeSimpleQuery (queryStr)
   (let ((queue (parseQuery queryStr "" "" (pqueue:make-pqueue #'<
-													          :key-type 'integer
-													          :value-type 'function))))
+															  :key-type 'integer
+															  :value-type 'function))))
 	(pqueue:pqueue-pop queue)
-	;(pprint queue)
-	(printTable (execute-queue (make-table) queue))
+	(lambda ()
+	  (execute-queue (make-table) queue)
+	  )
+	)
+  )
+
+(defun buildQueries (queryStr)
+  (let ((unionPos (search "union" queryStr)))
+	(cond
+	  ((not unionPos) (makeSimpleQuery queryStr))
+	  (t (let ()
+		   (lambda ()
+			 (funcall #'unionTables (makeSimpleQuery (subseq queryStr 0 unionPos)) (buildQueries (subseq queryStr (+ unionPos 6))))
+			 )
+		   ))
+	  )
+	)
+  )
+
+(defun query (queryStr)
+  (let ((fn (buildQueries queryStr)))
+	(printTable (funcall fn))
 	)
   )
 
