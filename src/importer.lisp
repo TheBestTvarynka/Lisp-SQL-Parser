@@ -108,7 +108,12 @@
   )
 
 (defun table-len (table)
-  (length (table-data table))
+  (let ((data (table-data table)))
+	(cond
+	  ((not data) nil)
+	  (t (length data))
+	  )
+	)
   )
 
 (defun table-value (row col table)

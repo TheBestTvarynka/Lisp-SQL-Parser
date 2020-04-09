@@ -64,6 +64,10 @@
 		     (terpri)
 			 )
 		   (table-data resultTable))
+	  (princ "(")
+	  (princ (length (table-data resultTable)))
+	  (princ " row(s))")
+	  (terpri)
 		)
   )
 

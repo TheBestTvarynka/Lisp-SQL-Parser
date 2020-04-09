@@ -33,6 +33,9 @@ sbcl --script cli.lisp
 ## Examples
 SQL-parser can execute next queries:
 ```sql
+query(select 5 + 6 * 2)
+query(select 5*(6+2))
+query(select concat('FirstName', substr('Myroniuk Pavlo Yaroslavovych', 8, 6)))
 query(select distinct title, id_mp, id_fr from map_zal-skl9)
 query(select distinct * from test where col > 15 and col < 23)
 query(select row + 2, col, pos_x, pos_y from test)

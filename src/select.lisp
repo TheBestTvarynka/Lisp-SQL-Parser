@@ -7,7 +7,7 @@
 (load "aggregatefunctions.lisp")
 
 (defun generateColumn (len val)
-  (make-array len :initial-element val)
+  (make-array (cond ((not len) 1)(t len)) :initial-element val)
   )
 
 (defun generateValue (value table)
@@ -28,8 +28,6 @@
   )
 
 (defun generateColumnValue (colname table)
-  ;(pprint colname)
-  ;(pprint table)
   (let ((colIndex (nth 0 (gethash colname (table-columnIndexes table)))))
     (let ((col (selectCoumn colIndex (table-data table))))
 	  (lambda ()
