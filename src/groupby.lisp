@@ -12,7 +12,6 @@
 			  (vector-push-extend (nth 0 (gethash col indexes)) columnIndexes)
 			  )
 			columns)
-	(pprint columnIndexes)
 	columnIndexes
 	)
   )
@@ -50,7 +49,6 @@
 						   res)
 						 row
 						 :initial-value (make-array 0 :fill-pointer 0))))
-	(pprint segment)
 	(reduce (lambda (someres index)
 			  (setf (aref segment index) (aref (aref segment index) 0))
 			  )
@@ -82,14 +80,9 @@
 ; (exit)
 
 (defun devideIntoGroups (sampleRow comparator curSegment data resData indexes)
-  (pprint sampleRow)
-  (pprint curSegment)
   (cond
-	((= (length data) 0) resData)
+	((= (length data) 0) (addToData curSegment resData))
 	((funcall comparator sampleRow (aref data 0))
-	 (terpri)
-	 (pprint "klei rnfireufnrei ugneriugneriu gneriuger gnerigneriu bneruigberuigber")
-	 (terpri)
 	 (devideIntoGroups sampleRow
 					   comparator
 					   (addToSegment 0 (aref data 0) curSegment indexes)
@@ -109,9 +102,6 @@
   (setf groupSrt (string-trim " " groupSrt))
   (let ((sortedTable (orderBy groupSrt table))
 		(indexes (getIndexes groupSrt table)))
-	(pprint groupSrt)
-	(pprint indexes)
-	(pprint (table-data sortedTable))
 	(let ((equalComparator (getEqualComparator indexes (createEqualsHashMap indexes table)))
 		  (firstRow (aref (table-data sortedTable) 0)))
 	  (make-table :tableName (table-tableName sortedTable)
@@ -126,8 +116,10 @@
 	  )
 	)
   )
-
+#||
 (defvar simpletable (readTableFromFile "datasource/test.csv"))
 (pprint (groupBy "row" simpletable))
 (terpri)
 (pprint "fegregregergegre")
+;||#
+

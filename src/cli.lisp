@@ -12,6 +12,7 @@
 (load "select.lisp")
 (load "joins.lisp")
 (load "union.lisp")
+(load "groupby.lisp")
 
 ; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
@@ -64,7 +65,7 @@
 (setf (gethash "right join" functions) #'join)
 (setf (gethash "full outer join" functions) #'join)
 (setf (gethash "where" functions) #'where)
-(setf (gethash "group by" functions) nil)
+(setf (gethash "group by" functions) #'groupBy)
 (setf (gethash "having" functions) nil)
 (setf (gethash "order by" functions) #'orderBy)
 (setf (gethash "select" functions) #'select)

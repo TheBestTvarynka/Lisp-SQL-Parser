@@ -3,18 +3,35 @@
   (make-array size :initial-element initialValue)
   )
 
+(defun isSegmented (data)
+  (vectorp (aref data 0))
+  )
+
+(defun simpleCount (column)
+  (reduce (lambda (cnt elem)
+			(cond
+              ((not elem) cnt)
+              (t (+ cnt 1))
+              )
+            )
+           column
+           :initial-value 0)
+  )
+
+(defun aggregateCount (column)
+  (reduce (lambda (resColumn elem)
+			(vector-push-extend (simpleCount elem) resColumn)
+			resColumn
+			)
+		  column
+		  :initial-value (make-array 0 :fill-pointer 0))
+  )
+
 (defun countRows (table)
   "count aggregate funciton"
   (setf table (funcall table))
   (make-table :columnNames "?column?"
-			  :data (createArray 1 (reduce (lambda (cnt elem)
-											  (cond
-												((not elem) cnt)
-												(t (+ cnt 1))
-												)
-											  )
-											(table-data table)
-											:initial-value 0)))
+			  :data (cond ((isSegmented (table-data table)) (aggregateCount (table-data table)))(t (createArray 1 (simpleCount (table-data table))))))
   )
 
 (defun getComparator (value)
