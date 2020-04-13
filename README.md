@@ -17,9 +17,10 @@ SQL-parser supports next functioality:
 * joins (inner, left, right, full outer).
 * order by. can use with multiply columns, like: `order by col1, col2 desc`
 * where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` inside a condition.
-* ~~group by~~ in progress...
+* group by
 * ~~having~~ in progress...
 * union
+* ~~limit~~ in progress...
 
 ## How to run SQL-parser
 For running this parser I use SBCL 2.0.1.
@@ -50,6 +51,8 @@ query(select test.id, test.row, test.col, test.title, test2.id, test2.price, tes
 query(select id, price, owner from test2 union select id, price, owner from test3)
 query(select id, price, owner from test2 union select id, price, owner from test3 union select id, price, owner from test4)
 query(select 1 union select 2 union select 3 union select 4)
+query(select row, count(col), count(title) from test group by row)
+query(select row, count(col), max(pos_x), avg(pos_y) from test group by row)
 ```
 
 ## Meta

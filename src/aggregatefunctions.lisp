@@ -43,25 +43,36 @@
     )
   )
 
+(defun simpleMax (column)
+  (reduce (lambda (maxvalue elem)
+	        (cond
+		      ((and (not maxvalue) elem) elem)
+		      ((not elem) maxvalue)
+		      ((funcall (getComparator elem) maxvalue elem) elem)
+		      (t maxvalue)
+		      )
+	        )
+		  column
+	      :initial-value nil)
+  )
+
+(defun aggregateMax (column)
+  (reduce (lambda (resColumn elem)
+			(vector-push-extend (simpleMax elem) resColumn)
+			resColumn
+			)
+		  column
+		  :initial-value (make-array 0 :fill-pointer 0))
+  )
+
 (defun maxRows (table)
   "max aggregate funciton"
   (setf table (funcall table))
   (make-table :columnNames "?column?"
-			  :data (createArray 1 (reduce (lambda (maxvalue elem)
-											  (cond
-												((and (not maxvalue) elem) elem)
-												((not elem) maxvalue)
-												((funcall (getComparator elem) maxvalue elem) elem)
-												(t maxvalue)
-												)
-											  )
-											(table-data table)
-											:initial-value nil)))
+			  :data (cond ((isSegmented (table-data table)) (aggregateMax (table-data table)))(t (createArray 1 (simpleMax (table-data table))))))
   )
 
-(defun findAverage (table)
-  "this funciton determine average value in given column"
-  (setf table (funcall table))
+(defun simpleAverage (column)
   (let ((sum 0) (amount 0))
 	(setq sum (reduce (lambda (sum elem)
 						 (cond
@@ -70,14 +81,29 @@
 							  (+ sum elem))
 						   )
 			           )
-					 (table-data table)
+					 column
 					 :initial-value 0))
-	(make-table :columnNames "?column?"
-				:data (createArray 1 (cond
-										((= amount 0) nil)
-										(t (/ (float sum) amount))
-										)))
+	(cond
+	  ((= amount 0) nil)
+	  (t (/ (float sum) amount))
+	  )
 	)
+  )
+
+(defun aggregateAverage (column)
+  (reduce (lambda (resColumn elem)
+			(vector-push-extend (simpleAverage elem) resColumn)
+			resColumn
+			)
+		  column
+		  :initial-value (make-array 0 :fill-pointer 0))
+  )
+
+(defun findAverage (table)
+  "this funciton determine average value in given column"
+  (setf table (funcall table))
+  (make-table :columnNames "?column?"
+			  :data (cond ((isSegmented (table-data table)) (aggregateAverage (table-data table)))(t (createArray 1 (simpleAverage (table-data table))))))
   )
 
 
