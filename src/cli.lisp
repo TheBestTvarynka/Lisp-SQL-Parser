@@ -13,6 +13,7 @@
 (load "joins.lisp")
 (load "union.lisp")
 (load "groupby.lisp")
+(load "having.lisp")
 
 ; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
@@ -66,7 +67,7 @@
 (setf (gethash "full outer join" functions) #'join)
 (setf (gethash "where" functions) #'where)
 (setf (gethash "group by" functions) #'groupBy)
-(setf (gethash "having" functions) nil)
+(setf (gethash "having" functions) #'having)
 (setf (gethash "order by" functions) #'orderBy)
 (setf (gethash "select" functions) #'select)
 (setf (gethash "limit" functions) nil)
@@ -159,22 +160,6 @@
 (defun loadTable (tableName)
   "load table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
-  )
-
-(defun parseCommand (commandQuery) 
-  "cut command name" 
-  (let ((openBracketPosition (position #\( commandQuery))) 
-    (setq openBracketPosition (cond 
-                                ((not openBracketPosition) 0) 
-                                (t openBracketPosition) 
-                                )) 
-    (subseq commandQuery 0 openBracketPosition) 
-    ) 
-  )
-
-(defun cutParameter (command)
-  "cut command parameter (text inside '()')"
-  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
   )
 
 (defun execute (commandQuery)

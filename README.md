@@ -18,7 +18,7 @@ SQL-parser supports next functioality:
 * order by. can use with multiply columns, like: `order by col1, col2 desc`
 * where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` inside a condition.
 * group by
-* ~~having~~ in progress...
+* having (but only one condition)
 * union
 * ~~limit~~ in progress...
 
@@ -26,8 +26,8 @@ SQL-parser supports next functioality:
 For running this parser I use SBCL 2.0.1.
 Type in your terminal:
 ```bash
-git clone https://github.com/TheBestTvarynka/LispFunctionalProgramming.git
-cd LispFunctionalProgramming/src
+git clone https://github.com/TheBestTvarynka/Lisp-SQL-Parser.git
+cd Lisp-SQL-Parser/src
 sbcl --script cli.lisp
 ```
 
@@ -53,6 +53,10 @@ query(select id, price, owner from test2 union select id, price, owner from test
 query(select 1 union select 2 union select 3 union select 4)
 query(select row, count(col), count(title) from test group by row)
 query(select row, count(col), max(pos_x), avg(pos_y) from test group by row)
+query(select row, count(col) from test group by row having count(col) > 3)
+query(select row, count(col) from test group by row having count(col) = 4)
+query(select row, count(col) from test group by row having count(col) < 5)
+query(select row, count(col) from test group by row having count(col) > 3 order by row desc)
 ```
 
 ## Meta

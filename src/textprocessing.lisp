@@ -40,3 +40,19 @@
   (split '() str separator)
   )
 
+(defun parseCommand (commandQuery)
+  "cut command name"
+  (let ((openBracketPosition (position #\( commandQuery)))
+    (setq openBracketPosition (cond
+                                ((not openBracketPosition) 0)
+                                (t openBracketPosition)
+                                ))
+    (subseq commandQuery 0 openBracketPosition)
+    )
+  )
+
+(defun cutParameter (command)
+  "cut command parameter (text inside '()')"
+  (subseq command (+ (position #\( command) 1) (position #\) command :from-end t))
+  )
+
