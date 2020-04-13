@@ -14,6 +14,7 @@
 (load "union.lisp")
 (load "groupby.lisp")
 (load "having.lisp")
+(load "limit.lisp")
 
 ; tables - hashmap where key is tablename and value is a table
 (defvar tables (make-hash-table :test 'equal))
@@ -70,7 +71,7 @@
 (setf (gethash "having" functions) #'having)
 (setf (gethash "order by" functions) #'orderBy)
 (setf (gethash "select" functions) #'select)
-(setf (gethash "limit" functions) nil)
+(setf (gethash "limit" functions) #'limit)
 (setf (gethash "" functions) nil)
 
 (defun getPriority (kword priorities)

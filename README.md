@@ -20,7 +20,7 @@ SQL-parser supports next functioality:
 * group by
 * having (but only one condition)
 * union
-* ~~limit~~ in progress...
+* limit
 
 ## How to run SQL-parser
 For running this parser I use SBCL 2.0.1.
@@ -57,6 +57,7 @@ query(select row, count(col) from test group by row having count(col) > 3)
 query(select row, count(col) from test group by row having count(col) = 4)
 query(select row, count(col) from test group by row having count(col) < 5)
 query(select row, count(col) from test group by row having count(col) > 3 order by row desc)
+query(select row, col, title from test limit 5)
 ```
 
 ## Meta
