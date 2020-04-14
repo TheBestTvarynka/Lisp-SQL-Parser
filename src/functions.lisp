@@ -97,6 +97,11 @@
 	)
   )
 
+(defun as (column name)
+  (make-table :columnNames (aref (table-data (funcall name)) 0)
+			  :data (table-data (funcall column)))
+  )
+
 (defun getFunction (fnname)
   (cond
 	((string= fnname "+") #'operator+)
@@ -109,6 +114,7 @@
 	((string= fnname "count") #'countRows)
 	((string= fnname "max") #'maxRows)
 	((string= fnname "avg") #'findAverage)
+	((string= fnname "as") #'as)
 	(t nil)
 	)
   )
@@ -125,6 +131,7 @@
 	((string= fnname "count") 1)
 	((string= fnname "max") 1)
 	((string= fnname "avg") 1)
+	((string= fnname "as") 2)
 	(t nil)
 	)
   )

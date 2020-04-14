@@ -70,7 +70,22 @@
 	((or (string= fn "+")
 		 (string= fn "-")) 7)
 	((string= fn "(") 6)
+	((string= fn "as") 5)
 	(t 9)
+	)
+  )
+
+(defun contain (val arr)
+  (cond
+	((= (length arr) 0) nil)
+	((string= val (aref arr 0)) t)
+	(t (contain val (subseq arr 1)))
+	)
+  )
+
+(defun isFunction (name)
+  (let ((functions #("substr" "concat" "count" "max" "avg" "case" "then" "else" "end" "as")))
+	(contain name functions)
 	)
   )
 
@@ -148,7 +163,7 @@
 	  ((not nameEnd)
 	   (setf operators (appendValue operators (generateColumnValue selectStr table)))
 	   (parseSelect "" operators stack table))
-	  ((char= #\( (char selectStr nameEnd))
+	  ((isFunction (subseq selectStr 0 nameEnd))
 	   (let ((funName (subseq selectStr 0 nameEnd)))
 	      (setf operators (insertOperatorInStack funName operators stack))
 	      (setf selectStr (string-left-trim " " (subseq selectStr nameEnd)))

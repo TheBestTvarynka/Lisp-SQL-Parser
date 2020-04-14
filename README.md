@@ -8,9 +8,11 @@ Table structure contain a few parameters:
 * data - all table data. holds as vector of vectors
 
 SQL-parser supports next functioality:
-* expressions on select. like: `select 1 + id ...`. All supported operators: `+,-,*,/,(,)`. Also can use another sql functions:
+* expressions in select. like: `select 1 + id * ...`. All supported operators: `+,-,*,/,(,)`.
+* sql functions:
     - substr (str, from, number_of_char)
     - concat (str1, str2)
+* as operator for renaming columns. `select count(col) as 'count' from …`. Unlike regular SQL, here we must enclose new column name between simple quotes `'new_column_name'`.
 * aggregate functions: count(), avg(), max()
 * ~~case~~ in progress...
 * from
@@ -39,20 +41,20 @@ query(select 5*(6+2))
 query(select concat('FirstName', substr('Myroniuk Pavlo Yaroslavovych', 8, 6)))
 query(select distinct title, id_mp, id_fr from map_zal-skl9)
 query(select distinct * from test where col > 15 and col < 23)
-query(select row + 2, col, pos_x, pos_y from test)
+query(select row + 2, col, pos_x, from test)
 query(select max(col) * count(row) from test)
 query(select 2*(col+pos_x), substr(title, 1, 3) from test)
 query(select 2*(col+pos_x), concat('piece: ', substr(title, 1, 3)) from test)
-query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.title from test2 left join test on test.id = test2.id)
-query(select test2.id, test2.price, test2.owner, test.row, test.pos_y, test.title from test2 left join test on test.id = test2.id order by test2.price)
+query(select test2.id, test2.price, test2.owner, test.row, test.title from test2 left join test on test.id = test2.id)
+query(select test2.id, test2.price, test2.owner, test.row, test.title from test2 left join test on test.id = test2.id order by test2.price)
 query(select test2.id, test2.price, test2.owner, test.row, test.title from test2 left join test on test.id = test2.id where test2.id < 5 order by test2.price desc)
 query(select test2.id, test2.price, test2.owner, test.row, test.col, test.pos_x, test.title from test2 inner join test on test.id = test2.id)
 query(select test.id, test.row, test.col, test.title, test2.id, test2.price, test2.owner from test full outer join test2 on test.id = test2.id)
 query(select id, price, owner from test2 union select id, price, owner from test3)
 query(select id, price, owner from test2 union select id, price, owner from test3 union select id, price, owner from test4)
 query(select 1 union select 2 union select 3 union select 4)
-query(select row, count(col), count(title) from test group by row)
-query(select row, count(col), max(pos_x), avg(pos_y) from test group by row)
+query(select row, count(col) as 'col_count', count(title) as 'title_count' from test group by row)
+query(select row, count(col) as 'count', max(pos_x) as 'max' from test group by row)
 query(select row, count(col) from test group by row having count(col) > 3)
 query(select row, count(col) from test group by row having count(col) = 4)
 query(select row, count(col) from test group by row having count(col) < 5)
