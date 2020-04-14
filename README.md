@@ -8,11 +8,11 @@ Table structure contain a few parameters:
 * data - all table data. holds as vector of vectors
 
 SQL-parser supports next functioality:
-* expressions in select. like: `select 1 + id * ...`. All supported operators: `+,-,*,/,(,)`.
+* expressions in select. like: `select 1 + id * ...`. All supported operators: `+,-,*,/,(,),<,>,=`.
 * sql functions:
     - substr (str, from, number_of_char)
     - concat (str1, str2)
-* as operator for renaming columns. `select count(col) as 'count' from …`. Unlike regular SQL, here we must enclose new column name between simple quotes `'new_column_name'`.
+* `as` operator for renaming columns. `select count(col) as 'count' …`. Unlike regular SQL, here we must enclose new column name between simple quotes `'new_column_name'`.
 * aggregate functions: count(), avg(), max()
 * ~~case~~ in progress...
 * from
@@ -38,6 +38,8 @@ SQL-parser can execute next queries:
 ```sql
 query(select 5 + 6 * 2)
 query(select 5*(6+2))
+query(select row = 2 from test)
+query(select row < 15 from test)
 query(select concat('FirstName', substr('Myroniuk Pavlo Yaroslavovych', 8, 6)))
 query(select distinct title, id_mp, id_fr from map_zal-skl9)
 query(select distinct * from test where col > 15 and col < 23)
