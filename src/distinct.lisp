@@ -1,3 +1,6 @@
+(require 'asdf)
+(load "cl-simple-table-master/cl-simple-table.asd")
+(asdf:load-system 'cl-simple-table)
 
 (defun getComparator (value)
   "returns function for comparing two element that have the same type as value"

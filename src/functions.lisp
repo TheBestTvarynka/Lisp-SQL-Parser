@@ -138,3 +138,40 @@
 	(t nil)
 	)
   )
+
+(defun getFirstRow (columns)
+  (mapcar (lambda (col)
+			(aref col 0)
+			)
+		  columns)
+  )
+(defun removeFirstRow (columns)
+  (mapcar (lambda (col)
+			(subseq col 1)
+			)
+		  columns)
+  )
+
+(defun findCorrect (&rest lst)
+  (cond
+	((= (length lst) 1) (nth 0 lst))
+	(t (cond
+		 ((nth 0 lst) (nth 1 lst))
+		 (t (apply #'findCorrect (cdr (cdr lst))))
+		 )
+	   )
+	)
+  )
+
+(defun makeCaseFunction (fns)
+  (let ((data (mapcar (lambda (table)(table-data table)) (mapcar (lambda (fn)(funcall fn)) fns))))
+	(lambda ()
+      (make-table :columnNames "?column?"
+			      :data (iterate #'findCorrect
+					  		     (make-array 0 :fill-pointer 0)
+							     0
+							     (length (nth 0 data))
+							     data))
+	  )
+	)
+  )

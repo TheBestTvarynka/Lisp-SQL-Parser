@@ -170,7 +170,7 @@
 	  ((string= command "exit") (exit))
 	  ((string= command "query") (query (cutParameter commandQuery)))
 	  ((string= command "load") (loadTable (cutParameter commandQuery)))
-	  (t (princ "Error: entered command not fund!!!"))
+	  (t (princ "Error: entered command not found!!!"))
 	  )
 	)
   )

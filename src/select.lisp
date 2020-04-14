@@ -72,11 +72,14 @@
 		 (string= fn "/")
 		 (string= fn ">")
 		 (string= fn "<")
-		 (string= fn "=")) 8)
+		 (string= fn "=")) 7)
+	((or (string= fn "when")
+		 (string= fn "then")
+		 (string= fn "else")) 6)
 	((or (string= fn "+")
-		 (string= fn "-")) 7)
-	((string= fn "(") 6)
-	((string= fn "as") 5)
+		 (string= fn "-")) 5)
+	((string= fn "(") 3)
+	((string= fn "as") 1)
 	(t 9)
 	)
   )
@@ -90,7 +93,7 @@
   )
 
 (defun isFunction (name)
-  (let ((functions #("substr" "concat" "count" "max" "avg" "case" "then" "else" "end" "as")))
+  (let ((functions #("substr" "concat" "count" "max" "avg" "case" "when" "then" "else" "end" "as")))
 	(contain name functions)
 	)
   )
@@ -163,6 +166,29 @@
 	)
   )
 
+(defun removeLast (lst n)
+  (remove-if (constantly t) lst :count n :from-end t)
+  )
+
+(defun deleteCaseFunctions (operators)
+  (let ((lastVal (nth 0 (last operators))))
+    (cond
+	  ((functionp lastVal) (deleteCaseFunctions (removeLast operators 1)))
+	  ((string= lastVal "case") (removeLast operators 1))
+	  (t (deleteCaseFunctions (removeLast operators 1)))
+	  )
+	)
+  )
+
+(defun getCaseFunctions (operators)
+  (let ((lastVal (car operators)))
+	(cond
+	  ((functionp lastVal) (getCaseFunctions (cdr operators)))
+	  ((string= lastVal "case") (copy-list (cdr operators)))
+	  (t (getCaseFunctions (cdr operators))))
+	)
+  )
+
 (defun readName (selectStr operators stack table)
   (let ((nameEnd (position-if-not #'ifNameChar selectStr)))
 	(cond
@@ -176,6 +202,11 @@
 			(parseSelect (string-left-trim " " (subseq selectStr nameEnd))
 						 (appendValue operators funName)
 						 stack
+						 table))
+		   ((string= funName "end")
+			(parseSelect (string-left-trim " " (subseq selectStr nameEnd))
+						 (appendValue (appendValue operators (stack-top stack)) funName)
+						 (stack-pop stack)
 						 table))
 		   (t
 	        (setf operators (insertOperatorInStack funName operators stack))
@@ -236,9 +267,15 @@
 	)
   )
 
-(defun removeLast (lst n)
-  (remove-if (constantly t) lst :count n :from-end t)
-  )
+#||
+(defvar table (readTableFromFile "datasource/test.csv"))
+(mapcar (lambda (elem)(pprint elem))
+		(parseSelect "1 + case when id < 3 then 3 when id = 3 then 2 else 1 end as 'comp'"
+					 '()
+					 (make-stack)
+					 table))
+(exit)
+;||#
 
 (defun buildFunctions (prevOperators nextOperators)
   (let ((next (car nextOperators)))
@@ -248,8 +285,13 @@
 	   (buildFunctions (appendValue prevOperators next) (cdr nextOperators)))
 	  ((stringp next)
 	   (cond
-		 ((string= next ",")
+		 ((or (string= next ",") (string= next "when") (string= next "then") (string= next "else"))
 		  (buildFunctions prevOperators (cdr nextOperators)))
+		 ((string= next "case")
+		  (buildFunctions (appendValue prevOperators (car nextOperators)) (cdr nextOperators)))
+		 ((string= next "end")
+		  (buildFunctions (appendValue (deleteCaseFunctions prevOperators) (makeCaseFunction (getCaseFunctions prevOperators)))
+						  (cdr nextOperators)))
 		 (t (let ((paramAmount (getArgumentAmount next)))
 			  (buildFunctions (appendValue (removeLast prevOperators paramAmount)
 										   (generateFunction next (last prevOperators paramAmount)))
