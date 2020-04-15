@@ -93,7 +93,7 @@
   )
 
 (defun isFunction (name)
-  (let ((functions #("substr" "concat" "count" "max" "avg" "case" "when" "then" "else" "end" "as")))
+  (let ((functions #("substr" "concat" "count" "max" "avg" "sum" "case" "when" "then" "else" "end" "as")))
 	(contain name functions)
 	)
   )

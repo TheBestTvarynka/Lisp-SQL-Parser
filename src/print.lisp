@@ -54,7 +54,7 @@
 	  (let ((widthSum (+ (reduce (lambda (sum width)
 								   (+ sum width)
 								   )
-							      widths) (+ (* (- (length widths) 1) 4) 1))))
+							      widths) (* (length widths) 3) 1)))
 	    (princ (format nil "~v@{~A~:*~}" widthSum  #\-))
 		(terpri)
 	    (printRow widths (table-columnNames resultTable))

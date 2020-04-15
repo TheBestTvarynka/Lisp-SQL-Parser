@@ -54,7 +54,7 @@ query(select test2.id, test2.price, test2.owner, test.row, test.col, test.pos_x,
 query(select test.id, test.row, test.col, test.title, test2.id, test2.price, test2.owner from test full outer join test2 on test.id = test2.id)
 query(select id, price, owner from test2 union select id, price, owner from test3)
 query(select id, price, owner from test2 union select id, price, owner from test3 union select id, price, owner from test4)
-query(select 1 union select 2 union select 3 union select 4)
+query(select 1 as 'numbers' union select 2 union select 3 union select 4)
 query(select row, count(col) as 'col_count', count(title) as 'title_count' from test group by row)
 query(select row, count(col) as 'count', max(pos_x) as 'max' from test group by row)
 query(select row, count(col) from test group by row having count(col) > 3)
@@ -63,6 +63,8 @@ query(select row, count(col) from test group by row having count(col) < 5)
 query(select row, count(col) from test group by row having count(col) > 3 order by row desc)
 query(select row, col, title from test limit 5)
 query(select row, case when row = 4 then 'four' when row > 5 then 'big' else 'small' end as 'comp' from test)
+query(select sum(case when sex = 't' then 1 else 0 end) as 'man_count' from test)
+query(select sum(case when sex = 't' then 0 else 1 end) as 'women_count' from test)
 ```
 
 ## Meta
