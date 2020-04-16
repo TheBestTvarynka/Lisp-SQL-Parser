@@ -178,7 +178,7 @@
 (defun run ()
   "run cli"
   (terpri)
-  (princ (format nil "[~A@~A]$: " (getEnvVariable "USER") (getEnvVariable "PWD")))
+  (princ (format nil "[~A@~A] $: " (getEnvVariable "USER") (getEnvVariable "PWD")))
   (terpri)
   (execute (read-line))
   (run)

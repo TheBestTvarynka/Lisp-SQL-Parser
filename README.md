@@ -13,10 +13,10 @@ SQL-parser supports next functioality:
     - substr (str, from, number_of_char)
     - concat (str1, str2)
 * `as` operator for renaming columns. `select count(col) as 'count' …`. Unlike regular SQL, here we must enclose new column name between simple quotes `'new_column_name'`.
-* aggregate functions: count(), avg(), max()
+* aggregate functions: `count(), avg(), max(), sum()`
 * case. In `then` branch can pass only values. In `where` clause can use only `<,>,=` operators.
 * from. Only tablename. Subqueries are not allowed.
-* joins (inner, left, right, full outer).
+* joins: `inner, left, right, full outer`
 * order by. can use with multiply columns, like: `order by col1, col2 desc`
 * where. can use `and` and `or` but without `()`. Only `=`, `<`, `>` inside a condition.
 * group by

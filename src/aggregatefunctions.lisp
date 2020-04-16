@@ -1,13 +1,16 @@
 
 (defun createArray (size initialValue)
+  "function that create array with length of 'size' where all elements are equals to initialValue"
   (make-array size :initial-element initialValue)
   )
 
 (defun isSegmented (data)
+  "check if input data is segmented"
   (and (arrayp (aref data 0)) (not (stringp (aref data 0))))
   )
 
 (defun simpleCount (column)
+  "count number of not-null elements in column"
   (reduce (lambda (cnt elem)
 			(cond
               ((not elem) cnt)
@@ -19,6 +22,7 @@
   )
 
 (defun segmentedAggregateFunction (fn column)
+  "execute aggregate function 'fn' on each segment of 'column'"
   (reduce (lambda (resColumn elem)
 			(vector-push-extend (funcall fn elem) resColumn)
 			resColumn
@@ -48,6 +52,7 @@
   )
 
 (defun simpleMax (column)
+  "finds max element in column"
   (reduce (lambda (maxvalue elem)
 	        (cond
 		      ((and (not maxvalue) elem) elem)
@@ -72,6 +77,7 @@
   )
 
 (defun simpleAverage (column)
+  "determine average value on column"
   (let ((sum 0) (amount 0))
 	(setq sum (reduce (lambda (sum elem)
 						 (cond
@@ -101,6 +107,7 @@
   )
 
 (defun simpleSum (column)
+  "sum all elements in column"
   (reduce (lambda (sum elem)
 			(cond
 			  ((not elem) sum)
