@@ -40,6 +40,8 @@
 				   "group by"
 				   "having"
 				   "limit"))
+
+; priorities for every operation
 (defvar priorities (make-hash-table :test 'equal))
 (setf (gethash "from" priorities) 1)
 (setf (gethash "inner join" priorities) 2)
@@ -55,11 +57,11 @@
 (setf (gethash "" priorities) 0)
 
 (defun from (tableStr &optional table)
-  ;(pprint "in from")
-  ;(pprint tableStr)
+  "returns table by tablename"
   (gethash (string-trim " " tableStr) tables)
   )
 
+; hashmap with all functions for quering
 (defvar functions (make-hash-table :test 'equal))
 (setf (gethash "from" functions) #'from)
 (setf (gethash "inner join" functions) #'join)
@@ -75,6 +77,7 @@
 (setf (gethash "" functions) nil)
 
 (defun getPriority (kword priorities)
+  "returns priority of operation"
   (gethash kword priorities)
   )
 
@@ -87,11 +90,12 @@
   )
 
 (defun getKeyWord (queryStr keyWords)
+  "returns sql-keyword if queryStr starts with one of keyWords or '' if not"
   (iterateArr 0 keyWords queryStr)
   )
 
 (defun make-fn (functionStr parametersStr)
-  ;(pprint (concatenate 'string functionStr "(" parametersStr ")"))
+  "makes function (lambda) that do some operation on the table corresponds to function name (functionStr)"
   (cond
 	((search "join" functionStr)
 	 (lambda (table)
@@ -104,6 +108,7 @@
   )
 
 (defun parseQuery (queryStr fnStr parameters queue)
+  "this function parses one query. means without 'union'. only one select"
   (let ((kword (getKeyWord queryStr keyWords)))
 	(cond
 	  ((string= queryStr "") (pqueue:pqueue-push (make-fn fnStr parameters)
@@ -122,6 +127,7 @@
   )
 
 (defun execute-queue (table queue)
+  "execute query. queue - queue with all operation that query contains"
   (cond
 	((pqueue:pqueue-empty-p queue) table)
 	(t (execute-queue (funcall (pqueue:pqueue-pop queue) (copy-table table)) queue))
@@ -129,6 +135,7 @@
   )
 
 (defun makeSimpleQuery (queryStr)
+  "returns lambda that executes the query if we call it"
   (let ((queue (parseQuery queryStr "" "" (pqueue:make-pqueue #'<
 															  :key-type 'integer
 															  :value-type 'function))))
@@ -140,6 +147,8 @@
   )
 
 (defun buildQueries (queryStr)
+  "splits queryStr on the queries by 'union' operator and make tree-like structure.
+  returns lambda that executes all queries and does union if it needs"
   (let ((unionPos (search "union" queryStr)))
 	(cond
 	  ((not unionPos) (makeSimpleQuery queryStr))
@@ -153,18 +162,20 @@
   )
 
 (defun query (queryStr)
+  "builds function for executing the query and executes its
+  prints result of quering"
   (let ((fn (buildQueries queryStr)))
 	(printTable (funcall fn))
 	)
   )
 
 (defun loadTable (tableName)
-  "load table command: print whole table"
+  "loads table command: print whole table"
   (query (concatenate 'string "select * from " tableName))
   )
 
 (defun execute (commandQuery)
-  "execute entered text"
+  "executes entered text"
   (let ((command (parseCommand commandQuery)))
 	(cond
 	  ((string= command "exit") (exit))
@@ -176,7 +187,7 @@
   )
 
 (defun run ()
-  "run cli"
+  "runs cli"
   (terpri)
   (princ (format nil "[~A@~A] $: " (getEnvVariable "USER") (getEnvVariable "PWD")))
   (terpri)

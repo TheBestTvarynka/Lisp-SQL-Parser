@@ -1,4 +1,5 @@
-
+; this function I just copies from stackoverflow.;
+; with that, I can get values of environment variables
 (defun getEnvVariable (name &optional default)
     #+CMU
     (let ((x (assoc name ext:*environment-list*

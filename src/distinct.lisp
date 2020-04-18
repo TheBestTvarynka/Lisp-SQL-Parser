@@ -21,7 +21,7 @@
   )
 
 (defun compareVectors (index vector1 vector2)
-  "this function compare vectors"
+  "this function compares vectors"
   (cond
     ((= index (array-total-size vector1)) nil)
     ((funcall (getEqual(aref vector1 index)) (aref vector1 index) (aref vector2 index)
@@ -33,17 +33,17 @@
     )
   )
 (defun compareV (vector1 vector2)
-  "run capmpateVectors function"
+  "starts comparing vectors"
   (compareVectors 0 vector1 vector2)
   )
 
 (defun sortTable (table)
-  "sort table"
+  "returns sorted table"
   (sort table #'compareV)
   )
 
 (defun delete-nth (index arr)
-  "delete element from 'arr' that have index 'index'"
+  "deletes element from 'arr' that have index 'index'"
   (delete-if (constantly t) arr :start index :count 1)
   )
 
