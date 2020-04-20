@@ -13,15 +13,18 @@
   )
 
 (defun getJoinTableName (joinStr)
+  "returns tablename"
   (string-trim " " (subseq joinStr (+ (search "join" joinStr) 4) (search "on" joinStr)))
   )
 
 (defun getJoinType (joinStr)
+  "returns join type"
   (setf joinStr (string-left-trim " " joinStr))
   (string-right-trim " " (subseq joinStr 0 (search "join" joinStr)))
   )
 
 (defun getJoinColumns (joinStr tableName)
+  "returns list with related columns between tables"
   (let ((params (mapcar (lambda (str)(string-trim " " str))
 		                (split-str (subseq joinStr (+ (search "on" joinStr) 3)) #\=))))
 	(cond
@@ -31,18 +34,13 @@
 	)
   )
 
-(defun findRow (value index data)
-  (find-if (lambda (row)
-			 (cond ((funcall (getEqual value) value (aref row index)) row)(t nil))
-			)
-		   data)
-  )
-
 (defun makeEmptyRow (size)
+  "returns empty row that have length 'size'"
   (make-array size :initial-element nil)
   )
 
 (defun concatenateRows (data1 data2)
+  "concatenates two rows"
   (concatenate 'vector data1 data2)
   )
 
@@ -195,9 +193,3 @@
 	)
   )
 
-#||
-(defvar tables (make-hash-table :test 'equal))
-(setf (gethash "test" tables) (readTableFromFile "datasource/test.csv"))
-(setf (gethash "test2" tables) (readTableFromFile "datasource/test2.csv"))
-(printTable (join "  left join test on test.id = test2.id" (gethash "test2" tables)  tables))
-;||#

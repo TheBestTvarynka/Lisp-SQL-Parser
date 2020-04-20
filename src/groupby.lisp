@@ -17,6 +17,9 @@
   )
 
 (defun equalRows (indexes row1 row2 comparators)
+  "compares row1 and row2.
+  indexes - array with indexes specified in group by statement
+  comparators - hashmap where key is index and value is comparator"
   (cond
     ((= (length indexes) 0) t)
     (t (let ((elem1 (aref row1 (aref indexes 0)))
@@ -27,12 +30,14 @@
   )
 
 (defun getEqualComparator (indexes comparators)
+  "returns lambda function that is comparator for rows"
   (lambda (row1 row2)
 	(equalRows indexes row1 row2 comparators)
 	)
   )
 
 (defun createEqualsHashMap (indexes table)
+  "returns new hashmao where key is index and value is comparator"
   (let ((row (aref (table-data table) 0)))
 	(reduce (lambda (hashmap index)
 			  (setf (gethash index hashmap) (getEqual (aref row index)))
@@ -44,6 +49,7 @@
   )
 
 (defun makeSimpleSegment (row indexes)
+  "makes one segment, that is the row where all elements are vectors with one value except elements with indexes specified in 'indexes'"
   (let ((segment (reduce (lambda (res value)
 						   (vector-push-extend (make-array 1 :initial-element value :fill-pointer 1) res)
 						   res)
@@ -59,16 +65,19 @@
   )
 
 (defun addToData (val data)
+  "adds val to the data and returns the data"
   (vector-push-extend val data)
   data
   )
 
 (defun addToSegmentCol (index val seg)
+  "adds 'val' to column in segment 'seg' with index 'index' and returns final segment"
   (vector-push-extend val (aref seg index))
   seg
   )
 
 (defun addToSegment (index row segment indexes)
+  "adds row to segment and returns final segment"
   (cond
 	((= index (length row)) segment)
 	((= (length indexes) 0) (addToSegment (+ index 1) row (addToSegmentCol index (aref row index) segment) indexes))
@@ -76,10 +85,9 @@
 	(t (addToSegment (+ index 1) row (addToSegmentCol index (aref row index) segment) indexes))
 	)
   )
-; (pprint (addToSegment 0 #(1 2 3 4 5) (makeSimpleSegment #(10 20 3 4 50) #(2 3)) #(2 3)))
-; (exit)
 
 (defun devideIntoGroups (sampleRow comparator curSegment data resData indexes)
+  "makes data segmented"
   (cond
 	((= (length data) 0) (addToData curSegment resData))
 	((funcall comparator sampleRow (aref data 0))
@@ -99,6 +107,7 @@
   )
 
 (defun groupBy (groupSrt table)
+  "group by function"
   (setf groupSrt (string-trim " " groupSrt))
   (let ((sortedTable (orderBy groupSrt table))
 		(indexes (getIndexes groupSrt table)))
@@ -116,10 +125,4 @@
 	  )
 	)
   )
-#||
-(defvar simpletable (readTableFromFile "datasource/test.csv"))
-(pprint (groupBy "row" simpletable))
-(terpri)
-(pprint "fegregregergegre")
-;||#
 

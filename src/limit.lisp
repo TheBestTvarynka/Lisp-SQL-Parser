@@ -1,5 +1,6 @@
 
 (defun limit (limitStr table)
+  "limit function"
   (let ((n (parse-integer (string-trim " " limitStr)))
 		(len (table-len table)))
     (make-table :tableName (table-tableName table)

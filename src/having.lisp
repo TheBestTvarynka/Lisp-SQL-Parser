@@ -5,6 +5,7 @@
 (load "functions.lisp")
 
 (defun getSimpleAggFunction (fnname)
+  "returns aggregate function corresponds to the function name 'fnname'"
   (cond
 	((string= fnname "count") #'simpleCount)
 	((string= fnname "max") #'simpleMax)
@@ -13,6 +14,7 @@
   )
 
 (defun makeFn (havingStr table)
+  "returns lambda function that return t/nil corresponds to the input row"
   (setf havingStr (string-trim " " havingStr))
   (let ((cnd (split-str havingStr #\SPACE)))
 	(let ((value (parse-value (nth 2 cnd))))
@@ -28,6 +30,7 @@
   )
 
 (defun filter (fn data)
+  "takes from data only suitable rows"
   (reduce (lambda (resData row)
 			(cond
 			  ((funcall fn row)
@@ -41,6 +44,7 @@
   )
 
 (defun having (havingStr table)
+  "having function"
   (make-table :tableName (table-tableName table)
                   :columnNames (table-columnNames table)
                   :columnIndexes (table-columnIndexes table)

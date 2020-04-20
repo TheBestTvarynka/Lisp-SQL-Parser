@@ -16,7 +16,7 @@
   )
 
 (defun generateSequence (n)
-  "generate sequence like '(0 1 2 3 ... )"
+  "generates sequence like '(0 1 2 3 ... )"
   (cond ((< n 0) '())
         ((= n 0) '(0))
         (t (append
@@ -26,7 +26,7 @@
   )
 
 (defun makeIndexes (i row hashTable)
-  "make hashMap there key is column name and value is its sequence number.
+  "makes hashMap where the key is column name and the value is its sequence number.
   like: (col1 -> '(0))
         (col2 -> '(1)) ..."
   (cond ((< i 0) hashTable)
@@ -37,7 +37,7 @@
   )
 
 (defun makeIndexHashMap (row)
-  "make full hashmap with indexes. like:
+  "makes full hashmap with indexes. like:
   (col1 -> '(0))
   ...
   (* -> '(0 1 2 ...))"
@@ -48,7 +48,7 @@
   )
 
 (defun createTable (tablename rawData)
-  "create table by tablename and rawData - readed file that represented in vector of vectors"
+  "creates table by tablename and rawData - readed file that represented in vector of vectors"
   (make-table :tableName tablename
 			  :columnNames (aref rawData 0)
 			  :columnIndexes (makeIndexHashMap (aref rawData 0))
@@ -57,14 +57,14 @@
   )
 
 (defun formatTable (resultTable)
-  "join columnNames and table data. as result we have table where first row is column names"
+  "joins columnNames and table data. as result we have table where first row is column names"
   (let ((titleRow (make-array 1 :initial-element (table-columnNames resultTable))))
 	(concatenate 'vector titleRow (table-data resultTable))
 	)
   )
 
 (defun getFileType (filename)
-  "cut file extension from filename. example: 'test.csv' -> 'csv', 'test' -> ''"
+  "cuts file extension from filename. example: 'test.csv' -> 'csv', 'test' -> ''"
   (let ((dotPosition (position #\. filename :from-end t)))
 	(cond
 	  ((not dotPosition) "")
@@ -74,7 +74,7 @@
   )
 
 (defun getTableName (filename)
-  "cut tablename from filename. example:
+  "cuts tablename from filename. example:
   'test.csv' -> 'test', 'test' -> 'test', 't.e.s.t.csv' -> 't.e.s.t'"
   (let ((dotPosition (position #\. filename :from-end t))
 		(slashPosition (position #\/ filename :from-end t)))
@@ -108,6 +108,7 @@
   )
 
 (defun table-len (table)
+  "returns length of the table"
   (let ((data (table-data table)))
 	(cond
 	  ((not data) nil)
@@ -117,9 +118,11 @@
   )
 
 (defun table-value (row col table)
+  "returns the value in the given column from row"
   (aref (aref (table-data table) row) col)
   )
 
 (defun table-column-number (table)
+  "returns column amount"
   (length (table-columnNames table))
   )

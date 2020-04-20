@@ -69,7 +69,7 @@ query(select sum(case when sex = 't' then 0 else 1 end) as 'women_count' from te
 
 ## Meta
 
-Pavlo Myroniyk – @TheBestTvarynka, [pspos.developqkation@gmail.com](mailto:pspos.developqkation@gmail.com)
+Pavlo Myroniyk – [@TheBestTvarynka](https://github.com/TheBestTvarynka), [pspos.developqkation@gmail.com](mailto:pspos.developqkation@gmail.com)
 
 If you want to
 * improve this project then make a pull request or write to me on email;
