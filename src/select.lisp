@@ -5,6 +5,7 @@
 (load "importer.lisp")
 (load "textprocessing.lisp")
 (load "aggregatefunctions.lisp")
+(load "joins.lisp")
 
 (defun generateColumn (len val)
   (make-array (cond ((not len) 1)(t len)) :initial-element val)
@@ -314,47 +315,20 @@
 					  )))
   (let ((fns (buildFunctions '() (parseSelect selectStr '() (make-stack) table))))
 	(let ((columns (mapcar (lambda (colFn)(funcall colFn)) fns)))
-	  (funcall distinctFn
-           	   (make-table :tableName (table-tableName table)
-           				   :columnNames (make-array (length columns) :initial-contents (mapcar (lambda (col)
-           											 						                     (table-columnNames col)
-           																	                     )
-           																	                   columns))
-           				   :data (iterate (lambda (&rest row)
-           								    (make-array (length row) :initial-contents row)
-           								    )
-           								  (make-array 0 :fill-pointer 0)
-           			    				  0
-           			   					  (table-len (nth 0 columns))
-           			   					  (mapcar (lambda (col)(table-data col)) columns))))
+	  (addIndexes (funcall distinctFn
+           	        (make-table :tableName (table-tableName table)
+           				        :columnNames (make-array (length columns) :initial-contents (mapcar (lambda (col)
+           											 						                          (table-columnNames col)
+           																	                          )
+           																	                        columns))
+           				        :data (iterate (lambda (&rest row)
+           								         (make-array (length row) :initial-contents row)
+           								         )
+           								       (make-array 0 :fill-pointer 0)
+           			    				       0
+           			   					       (table-len (nth 0 columns))
+           			   					       (mapcar (lambda (col)(table-data col)) columns)))))
 	  )
 	))
   )
-
-;(defvar simple (make-table :tableName "test"
-						   ;:columnNames '("col1" "col2" "col3")
-						   ;:columnIndexes (makeIndexHashMap #("col1" "col2" "col3"))
-						   ;:data #(#(1 "pasha programmer" 61)
-								   ;#(2 "pacha uzurpator" 98)
-								   ;#(3 "asan homeless" 645)
-								   ;#(4 "yter king" 5)
-								   ;#(5 "Q'Kation" 15)
-								   ;)))
-
-;(test "col3")
-;(pprint (select "col1 + 1, col2" simple))
-;(test "concat('name is: ', col2)")
-;(test "concat('piece: ', substr(col2, col1, 2))")
-;(pprint "========================")
-;(test "col1 + 1, concat('name is: ', col2)")
-#||
-(pprint (parseSelect "1 + 3*(fn('value', id, 3) +2) - 4" '() (make-stack) nil))
-(pprint (parseSelect "1 + 3*(fn('value', 43 + id * 6, 3) +2) - 4" '() (make-stack) nil))
-(pprint (parseSelect "1 + 3*(fn('value', 43 + count(id) * 6, 3) +2) - 4" '() (make-stack) nil))
-(pprint (parseSelect "concat(name, ' ', description)" '() (make-stack) nil))
-(pprint (parseSelect "col1" '() (make-stack) nil))
-(pprint (parseSelect "2 +id" '() (make-stack) nil))
-(pprint (parseSelect "col1, 2 + id, concat('name is: ', name)" '() (make-stack) nil))
-(pprint (parseSelect "3+6*5, pow(2 + id, 2) + 3, concat('name is: ', name)" '() (make-stack) nil))
-;||#
 

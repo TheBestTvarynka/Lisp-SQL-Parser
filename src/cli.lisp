@@ -51,8 +51,8 @@
 (setf (gethash "where" priorities) 3)
 (setf (gethash "group by" priorities) 4)
 (setf (gethash "having" priorities) 5)
-(setf (gethash "order by" priorities) 6)
-(setf (gethash "select" priorities) 7)
+(setf (gethash "select" priorities) 6)
+(setf (gethash "order by" priorities) 7)
 (setf (gethash "limit" priorities) 8)
 (setf (gethash "" priorities) 0)
 
