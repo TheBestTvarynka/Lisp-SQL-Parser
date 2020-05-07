@@ -18,16 +18,21 @@
   )
 
 (defun starts-with (str pattern)
+  "checkes is str starts with pattern.
+  return t or nil"
   (let ((p (search pattern str)))
     (and p (= 0 p))
         )
   )
 
 (defun appendToList (lst value)
+  "append to 'lst' value 'value'"
   (append lst (list value))
   )
 
 (defun split (words str separator)
+  "splits 'str' into list of string by 'separator'.
+  collets words in list 'words'"
   (let ((sepPos (position separator str)))
     (cond
 	  ((not sepPos) (appendToList words str))
@@ -37,6 +42,7 @@
   )
 
 (defun split-str (str separator)
+  "splits 'str' into list of words by 'separator'"
   (split '() str separator)
   )
 
