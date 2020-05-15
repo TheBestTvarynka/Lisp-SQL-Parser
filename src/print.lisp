@@ -1,14 +1,10 @@
 
 (defun len (value)
-  "returns length of value"
   (cond
-	((not value) 3)
 	((stringp value) (length value))
-	((numberp value) (length (write-to-string value)))
-	(t 1)
+	(t (length (write-to-string value)))
 	)
   )
-
 (defun countWidths (table)
   "returns array that contain width of each column of the table"
   (let ((columnsAmount (length (aref table 0))))
@@ -26,12 +22,7 @@
   )
 
 (defun getFormatString (width elem)
-  "construct control-string for format function"
-  (cond
-	((stringp elem) (concatenate 'string " ~" (write-to-string width) "A"))
-	((numberp elem) (concatenate 'string " ~" (write-to-string width) "D"))
-	(t (concatenate 'string "~" (write-to-string width) "A"))
-	)
+  (concatenate 'string " ~" (write-to-string width) "A")
   )
 
 (defun printRow (widths row)
@@ -40,7 +31,7 @@
 	(princ "|")
     (map 'list
   	     (lambda (width elem)
-  		   (princ (format nil (getFormatString width elem) elem))
+  		   (princ (format nil (getFormatString width elem) (cond ((stringp elem) elem)(t (write-to-string elem)))))
 		   (princ " |")
   		   )
   		  widths
