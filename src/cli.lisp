@@ -171,7 +171,7 @@
 
 (defun loadTable (tableName)
   "loads table command: print whole table"
-  (query (concatenate 'string "select * from " tableName))
+  (printTable (gethash tableName tables))
   )
 
 (defun execute (commandQuery)

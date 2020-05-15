@@ -43,10 +43,4 @@
                                            (list (* (pow -1 (- n 1)) (pow 2 (- n 1))))))
                                 ))
 ;==== test heapSort
-(write (heapSort (generateSequence 5)))
-(terpri)
-(write (heapSort (generateSequence 6)))
-(terpri)
 (write (heapSort (generateSequence 7)))
-(terpri)
-(write (heapSort (generateSequence 8)))
