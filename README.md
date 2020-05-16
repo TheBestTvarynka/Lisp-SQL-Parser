@@ -32,6 +32,7 @@ git clone https://github.com/TheBestTvarynka/Lisp-SQL-Parser.git
 cd Lisp-SQL-Parser/src
 sbcl --script cli.lisp
 ```
+For exiting type `exit()`.
 
 ## Examples
 SQL-parser can execute next queries:
